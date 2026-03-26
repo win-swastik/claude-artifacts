@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Artifacts – Swastik Nigam</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 860px; margin: 60px auto; padding: 0 24px; color: #1a1a1a; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  p.sub { color: #666; margin-top: 0; margin-bottom: 40px; font-size: 0.95rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px 20px; text-decoration: none; color: inherit; transition: box-shadow .15s; display: block; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); border-color: #ccc; }
+  .card .name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+  .card .meta { font-size: 0.8rem; color: #888; }
+  .tag { display: inline-block; background: #f0f0f0; border-radius: 4px; padding: 1px 7px; font-size: 0.75rem; margin-right: 4px; }
+  .tag.html { background: #fff3cd; color: #856404; }
+  .tag.jsx  { background: #d1ecf1; color: #0c5460; }
+</style>
+</head>
+<body>
+<h1>Claude Artifacts</h1>
+<p class="sub">Dashboards, reports, and tools generated in Cowork sessions.</p>
+<div class="grid" id="grid">
+  <p style="color:#aaa;grid-column:1/-1">No artifacts published yet.</p>
+</div>
+<script>
+// Auto-populated by deploy script
+const artifacts = ARTIFACTS_JSON;
+if (artifacts && artifacts.length) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = artifacts.map(a => `
+    <a class="card" href="${a.file}" target="_blank">
+      <div class="name">${a.title}</div>
+      <div class="meta">
+        <span class="tag ${a.type}">${a.type.toUpperCase()}</span>
+        ${a.date}
+      </div>
+    </a>`).join('');
+}
+</script>
+</body>
+</html>
