@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Tasks by Person — Age Breakdown</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-card: #ffffff;
+            --bg-header: #1a1a2e;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-on-dark: #ffffff;
+            --gap: 16px;
+            --radius: 8px;
+            --bucket-0-7: #2ecc71;
+            --bucket-8-14: #f1c40f;
+            --bucket-15-30: #e67e22;
+            --bucket-31-60: #e74c3c;
+            --bucket-60plus: #8e44ad;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .dashboard-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: var(--gap);
+        }
+
+        .dashboard-header {
+            background: var(--bg-header);
+            color: var(--text-on-dark);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+        }
+
+        .dashboard-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-header p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: var(--gap);
+        }
+
+        .chart-container h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .chart-container canvas {
+            max-height: 380px;
+        }
+
+        .table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow-x: auto;
+            margin-bottom: var(--gap);
+        }
+
+        .table-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 2px solid #dee2e6;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .data-table tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table tbody tr:hover { background: #f8f9fa; }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-not-started { background: #fef3c7; color: #92400e; }
+        .status-paused { background: #fce7f3; color: #9d174d; }
+        .status-doing-now { background: #dbeafe; color: #1e40af; }
+        .status-in-progress { background: #d1fae5; color: #065f46; }
+        .status-review { background: #e0e7ff; color: #3730a3; }
+
+        .age-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .age-0-7 { background: var(--bucket-0-7); }
+        .age-8-14 { background: var(--bucket-8-14); color: #333; }
+        .age-15-30 { background: var(--bucket-15-30); }
+        .age-31-60 { background: var(--bucket-31-60); }
+        .age-60plus { background: var(--bucket-60plus); }
+
+        .dashboard-footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 12px 0;
+        }
+
+        @media (max-width: 768px) {
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Pending Tasks — Age Breakdown by Person</h1>
+            <p>All Company Tasks · Notion · Statuses: Not Started, Paused, Doing Now, In Progress, Review</p>
+        </header>
+
+        <section class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Pending</div>
+                <div class="kpi-value" id="kpi-total">18</div>
+                <div class="kpi-sub">across 4 people</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Fresh (0–7 d)</div>
+                <div class="kpi-value" style="color:var(--bucket-0-7)">12</div>
+                <div class="kpi-sub">67% of all pending</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Aging (15–60 d)</div>
+                <div class="kpi-value" style="color:var(--bucket-15-30)">2</div>
+                <div class="kpi-sub">need attention</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Stale (60+ d)</div>
+                <div class="kpi-value" style="color:var(--bucket-60plus)">4</div>
+                <div class="kpi-sub">22% of all pending</div>
+            </div>
+        </section>
+
+        <section class="chart-container">
+            <h3>Tasks by Person & Age Bucket</h3>
+            <canvas id="stacked-bar-chart"></canvas>
+        </section>
+
+        <section class="table-section">
+            <h3>All Pending Tasks</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Assignee</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Age</th>
+                        <th>Bucket</th>
+                    </tr>
+                </thead>
+                <tbody id="task-table-body"></tbody>
+            </table>
+        </section>
+
+        <footer class="dashboard-footer">
+            Data as of: 13 Feb 2026 · Source: Notion — All Company Tasks
+        </footer>
+    </div>
+
+    <script>
+        const TODAY = new Date('2026-02-13');
+
+        const TASKS = [
+            { task: 'Saber Money docs', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'FX Retail', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'OnMeta', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'VAT project', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Mobikwik', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Apollo', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Canva decks', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'EMD Agency UK', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Investor narratives', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Segregate businesses', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Research EMI license', assignee: 'Swastik', status: 'Not Started', created: '2026-02-11' },
+            { task: 'Review Import flow agreement', assignee: 'Swastik', status: 'Paused', created: '2025-10-23' },
+            { task: 'Researching on 404 error', assignee: 'Denila', status: 'Doing Now', created: '2026-02-12' },
+            { task: 'Workflows to Sagepilot', assignee: 'Denila', status: 'In Progress', created: '2025-09-11' },
+            { task: 'Substack content distribution', assignee: 'Denila', status: 'Paused', created: '2025-01-22' },
+            { task: 'FAQ not opening', assignee: 'Unknown (7cdd)', status: 'Not Started', created: '2026-01-20' },
+            { task: 'Add sanity tracking for 404 pages', assignee: 'Unknown (7cdd)', status: 'Not Started', created: '2025-12-01' },
+            { task: 'IA Reengagement: Idle Users', assignee: 'Unknown (d1e9)', status: 'In Progress', created: '2026-01-12' },
+        ];
+
+        function ageDays(created) {
+            const d = new Date(created);
+            return Math.floor((TODAY - d) / (1000 * 60 * 60 * 24));
+        }
+
+        function bucketLabel(days) {
+            if (days <= 7) return '0–7 days';
+            if (days <= 14) return '8–14 days';
+            if (days <= 30) return '15–30 days';
+            if (days <= 60) return '31–60 days';
+            return '60+ days';
+        }
+
+        function bucketClass(days) {
+            if (days <= 7) return 'age-0-7';
+            if (days <= 14) return 'age-8-14';
+            if (days <= 30) return 'age-15-30';
+            if (days <= 60) return 'age-31-60';
+            return 'age-60plus';
+        }
+
+        function statusClass(status) {
+            return 'status-' + status.toLowerCase().replace(/\s+/g, '-');
+        }
+
+        // Enrich tasks
+        TASKS.forEach(t => {
+            t.ageDays = ageDays(t.created);
+            t.bucket = bucketLabel(t.ageDays);
+        });
+
+        // ── Stacked Bar Chart ──
+        const people = [...new Set(TASKS.map(t => t.assignee))];
+        const buckets = ['0–7 days', '8–14 days', '15–30 days', '31–60 days', '60+ days'];
+        const bucketColors = ['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#8e44ad'];
+
+        const datasets = buckets.map((b, i) => ({
+            label: b,
+            data: people.map(p => TASKS.filter(t => t.assignee === p && t.bucket === b).length),
+            backgroundColor: bucketColors[i],
+            borderColor: bucketColors[i],
+            borderWidth: 1,
+            borderRadius: 4,
+        }));
+
+        const ctx = document.getElementById('stacked-bar-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels: people, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 16, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} task${ctx.parsed.y !== 1 ? 's' : ''}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { font: { size: 13, weight: '600' } }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: { size: 12 }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Tasks',
+                            font: { size: 13 }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── Task Table ──
+        const tbody = document.getElementById('task-table-body');
+        const sorted = [...TASKS].sort((a, b) => b.ageDays - a.ageDays);
+        sorted.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${t.task}</td>
+                <td>${t.assignee}</td>
+                <td><span class="status-badge ${statusClass(t.status)}">${t.status}</span></td>
+                <td>${new Date(t.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                <td>${t.ageDays}d</td>
+                <td><span class="age-badge ${bucketClass(t.ageDays)}">${t.bucket}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    </script>
+</body>
+</html>

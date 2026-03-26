@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCA 6-Month vs 12-Month Rolling Retention</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 24px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #6c757d; font-size: 14px; margin-bottom: 24px; }
+  .kpi-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .kpi { background: #fff; border-radius: 12px; padding: 20px 24px; flex: 1; min-width: 200px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .kpi-label { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; }
+  .kpi-delta { font-size: 13px; margin-top: 4px; }
+  .up { color: #0f9d58; }
+  .chart-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 24px; }
+  .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .table-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #e9ecef; color: #6c757d; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f1f3f5; }
+  tr:hover td { background: #f8f9fa; }
+  .bar6 { display: inline-block; height: 8px; border-radius: 4px; background: #4361ee; margin-right: 6px; vertical-align: middle; }
+  .bar12 { display: inline-block; height: 8px; border-radius: 4px; background: #e85d04; margin-right: 6px; vertical-align: middle; }
+  .method-note { font-size: 12px; color: #868e96; margin-top: 16px; line-height: 1.6; }
+  .gap-label { font-size: 11px; color: #868e96; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>GCA — Rolling Retention: 6-Month vs 12-Month</h1>
+  <p class="subtitle">Of clients who transacted in the prior N months, what % transacted again this month?</p>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">12-Month Retention (Jan '26)</div>
+      <div class="kpi-value" style="color:#e85d04">48.0%</div>
+      <div class="kpi-delta up">▲ +14.8pp from Jul '24 (33.2%)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">6-Month Retention (Jan '26)</div>
+      <div class="kpi-value" style="color:#4361ee">57.5%</div>
+      <div class="kpi-delta up">▲ +9.4pp from Jul '24 (48.1%)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gap (6m − 12m)</div>
+      <div class="kpi-value">9.5pp</div>
+      <div class="gap-label">Was 14.9pp in Jul '24 — narrowing</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">12m Cohort Size (Jan '26)</div>
+      <div class="kpi-value">202</div>
+      <div class="kpi-delta">97 retained, 7 net-new</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Retention Rate — 6-Month vs 12-Month Rolling</div>
+    <canvas id="retentionChart" height="100"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Cohort Size & Retained Customers</div>
+    <canvas id="countChart" height="100"></canvas>
+  </div>
+
+  <div class="table-card">
+    <div class="chart-title">Monthly Detail</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Active</th>
+          <th>6m Cohort</th>
+          <th>6m Retained</th>
+          <th>6m Retention</th>
+          <th>12m Cohort</th>
+          <th>12m Retained</th>
+          <th>12m Retention</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <p class="method-note">
+    <strong>Methodology:</strong> For each month M, we identify all unique clients who completed a withdrawal in the prior N months. We then check how many of those same clients also completed a withdrawal in month M. Retention % = retained / prior Nm cohort × 100. The 12-month window naturally has a larger denominator (more clients touched in a year), so the % is lower — but the gap narrowing over time signals that long-dormant clients are re-engaging.<br>
+    <strong>Source:</strong> <code>withdrawal</code> table (status = completed), [PROD] GCA Read Replica.
+  </p>
+</div>
+
+<script>
+const data = [
+  {month:"Jul '24",active:73, c6:135,r6:65,p6:48.1, c12:199,r12:66,p12:33.2},
+  {month:"Aug '24",active:64, c6:139,r6:55,p6:39.6, c12:198,r12:55,p12:27.8},
+  {month:"Sep '24",active:82, c6:144,r6:70,p6:48.6, c12:198,r12:70,p12:35.4},
+  {month:"Oct '24",active:84, c6:148,r6:73,p6:49.3, c12:202,r12:73,p12:36.1},
+  {month:"Nov '24",active:79, c6:145,r6:71,p6:49.0, c12:205,r12:71,p12:34.6},
+  {month:"Dec '24",active:82, c6:144,r6:73,p6:50.7, c12:197,r12:73,p12:37.1},
+  {month:"Jan '25",active:82, c6:142,r6:74,p6:52.1, c12:192,r12:76,p12:39.6},
+  {month:"Feb '25",active:80, c6:137,r6:69,p6:50.4, c12:194,r12:71,p12:36.6},
+  {month:"Mar '25",active:90, c6:141,r6:80,p6:56.7, c12:200,r12:81,p12:40.5},
+  {month:"Apr '25",active:86, c6:145,r6:79,p6:54.5, c12:201,r12:81,p12:40.3},
+  {month:"May '25",active:90, c6:141,r6:80,p6:56.7, c12:194,r12:83,p12:42.8},
+  {month:"Jun '25",active:94, c6:147,r6:87,p6:59.2, c12:192,r12:87,p12:45.3},
+  {month:"Jul '25",active:93, c6:147,r6:84,p6:57.1, c12:190,r12:86,p12:45.3},
+  {month:"Aug '25",active:91, c6:149,r6:84,p6:56.4, c12:186,r12:84,p12:45.2},
+  {month:"Sep '25",active:87, c6:150,r6:79,p6:52.7, c12:188,r12:81,p12:43.1},
+  {month:"Oct '25",active:96, c6:152,r6:83,p6:54.6, c12:189,r12:84,p12:44.4},
+  {month:"Nov '25",active:101, c6:158,r6:87,p6:55.1, c12:193,r12:88,p12:45.6},
+  {month:"Dec '25",active:99, c6:165,r6:93,p6:56.4, c12:202,r12:93,p12:46.0},
+  {month:"Jan '26",active:104, c6:167,r6:96,p6:57.5, c12:202,r12:97,p12:48.0},
+];
+
+const labels = data.map(d => d.month);
+
+// Dual retention line chart
+new Chart(document.getElementById('retentionChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: '6-Month Retention',
+        data: data.map(d => d.p6),
+        borderColor: '#4361ee',
+        backgroundColor: 'rgba(67,97,238,0.06)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#4361ee',
+        borderWidth: 2.5
+      },
+      {
+        label: '12-Month Retention',
+        data: data.map(d => d.p12),
+        borderColor: '#e85d04',
+        backgroundColor: 'rgba(232,93,4,0.06)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#e85d04',
+        borderWidth: 2.5
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' } }
+    },
+    scales: {
+      y: { min: 20, max: 65, ticks: { callback: v => v + '%' }, grid: { color: '#f1f3f5' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Stacked bar: cohort + retained for both windows
+new Chart(document.getElementById('countChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { label: '12m Cohort', data: data.map(d => d.c12), backgroundColor: 'rgba(232,93,4,0.15)', borderColor: '#e85d04', borderWidth: 1, borderRadius: 4 },
+      { label: '12m Retained', data: data.map(d => d.r12), backgroundColor: '#e85d04', borderRadius: 4 },
+      { label: '6m Cohort', data: data.map(d => d.c6), backgroundColor: 'rgba(67,97,238,0.15)', borderColor: '#4361ee', borderWidth: 1, borderRadius: 4 },
+      { label: '6m Retained', data: data.map(d => d.r6), backgroundColor: '#4361ee', borderRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'rectRounded' } } },
+    scales: {
+      y: { grid: { color: '#f1f3f5' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Table
+const tbody = document.getElementById('tableBody');
+data.forEach(d => {
+  const bar6W = Math.round(d.p6 / 60 * 80);
+  const bar12W = Math.round(d.p12 / 60 * 80);
+  tbody.innerHTML += `<tr>
+    <td><strong>${d.month}</strong></td>
+    <td>${d.active}</td>
+    <td>${d.c6}</td>
+    <td>${d.r6}</td>
+    <td><span class="bar6" style="width:${bar6W}px"></span>${d.p6}%</td>
+    <td>${d.c12}</td>
+    <td>${d.r12}</td>
+    <td><span class="bar12" style="width:${bar12W}px"></span>${d.p12}%</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>

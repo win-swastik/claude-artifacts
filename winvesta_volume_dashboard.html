@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winvesta — Platform Volume Analysis</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f6fa; color: #2d3436; padding: 32px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #636e72; margin-bottom: 32px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .card.wide { grid-column: span 2; }
+  .card.full { grid-column: span 3; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #636e72; margin-bottom: 12px; }
+  .big-number { font-size: 36px; font-weight: 700; color: #0984e3; }
+  .big-number.green { color: #00b894; }
+  .big-number.purple { color: #6c5ce7; }
+  .big-number small { font-size: 16px; font-weight: 400; color: #636e72; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; background: #f5f6fa; font-weight: 600; border-bottom: 2px solid #dfe6e9; }
+  td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+  tr:hover td { background: #f8f9fa; }
+  .amount { text-align: right; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag.cc { background: #dfe6e9; color: #2d3436; }
+  .tag.xf { background: #e8f8f5; color: #00b894; }
+  .section-label { font-size: 18px; font-weight: 700; margin: 32px 0 16px 0; }
+  .note { background: #ffeaa7; padding: 16px; border-radius: 8px; font-size: 13px; line-height: 1.6; margin-top: 24px; }
+  .note strong { font-weight: 700; }
+  .bar-container { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .bar-label { width: 40px; font-size: 12px; font-weight: 600; text-align: right; }
+  .bar { height: 24px; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; color: #fff; font-weight: 600; min-width: 40px; }
+  .bar.usd { background: #0984e3; }
+  .bar.gbp { background: #6c5ce7; }
+  .bar.eur { background: #00b894; }
+  .bar.cad { background: #e17055; }
+  .bar.inr { background: #fdcb6e; color: #2d3436; }
+  .bar.other { background: #b2bec3; }
+</style>
+</head>
+<body>
+
+<h1>Winvesta — Cross-Border Payment Volume Analysis</h1>
+<p class="subtitle">All-time data from Currencycloud (2021–2024) + Xflow/PayGlocal rails. Pulled from Metabase, 24 Mar 2026.</p>
+
+<div class="grid">
+  <div class="card">
+    <h2>Total Platform Volume (USD-eq.)</h2>
+    <div class="big-number">$62.3M <small>USD-eq.</small></div>
+  </div>
+  <div class="card">
+    <h2>Total Transactions</h2>
+    <div class="big-number green">40,816</div>
+  </div>
+  <div class="card">
+    <h2>Currencies Supported</h2>
+    <div class="big-number purple">22</div>
+  </div>
+</div>
+
+<div class="section-label">Volume by Currency — Currencycloud Rail (2021–2024)</div>
+<p style="font-size:13px; color:#636e72; margin-bottom:16px;">Inbound credits only (money received into client accounts). INR shown separately — it represents the conversion/payout leg and is NOT additive.</p>
+
+<div class="grid">
+  <div class="card wide">
+    <h2>Foreign Currency Inbound (Non-INR) — ~$45.8M USD-eq.</h2>
+    <div class="bar-container"><div class="bar-label">USD</div><div class="bar usd" style="width: calc(26.7 / 26.7 * 100%);">$26.7M</div></div>
+    <div class="bar-container"><div class="bar-label">GBP</div><div class="bar gbp" style="width: calc(14.2 / 26.7 * 100%);">£11.3M → $14.2M</div></div>
+    <div class="bar-container"><div class="bar-label">EUR</div><div class="bar eur" style="width: calc(3.8 / 26.7 * 100%);">€3.5M → $3.8M</div></div>
+    <div class="bar-container"><div class="bar-label">CAD</div><div class="bar cad" style="width: calc(0.6 / 26.7 * 100%);">C$819K → $606K</div></div>
+    <div class="bar-container"><div class="bar-label">Other</div><div class="bar other" style="width: calc(0.5 / 26.7 * 100%);">AUD, AED, SGD, THB, CHF +</div></div>
+  </div>
+  <div class="card">
+    <h2>INR Conversion Leg</h2>
+    <div class="big-number" style="font-size:28px; color:#fdcb6e;">₹404.7M</div>
+    <p style="font-size:12px; color:#636e72; margin-top:8px;">≈ $4.9M USD-eq. at avg rates.<br>This is the <strong>payout side</strong> — same money as the foreign currency inbound, converted to INR for Indian beneficiaries. Not additive.</p>
+  </div>
+</div>
+
+<div class="section-label">Volume by Currency — Xflow / PayGlocal Rail (2023–present)</div>
+<p style="font-size:13px; color:#636e72; margin-bottom:16px;">Completed withdrawals/payouts on the newer payment rails. ~$16.5M USD-eq. total.</p>
+
+<div class="grid">
+  <div class="card full">
+    <table>
+      <thead>
+        <tr><th>Currency</th><th>Rail</th><th class="amount">Volume</th><th class="amount">USD-eq.</th><th class="amount">Txns</th><th class="amount">Revenue</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>USD</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">$13,649,875</td><td class="amount">$13,649,875</td><td class="amount">4,935</td><td class="amount">$128,530</td></tr>
+        <tr><td>EUR</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">€1,336,160</td><td class="amount">$1,456,414</td><td class="amount">676</td><td class="amount">€16,126</td></tr>
+        <tr><td>GBP</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">£666,570</td><td class="amount">$839,878</td><td class="amount">795</td><td class="amount">£9,042</td></tr>
+        <tr><td>CAD</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">C$510,484</td><td class="amount">$377,758</td><td class="amount">113</td><td class="amount">C$6,102</td></tr>
+        <tr><td>CHF</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">CHF 103,466</td><td class="amount">$113,813</td><td class="amount">46</td><td class="amount">CHF 1,753</td></tr>
+        <tr><td>AUD</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">A$75,626</td><td class="amount">$49,157</td><td class="amount">176</td><td class="amount">A$2,241</td></tr>
+        <tr><td>AED</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">AED 44,774</td><td class="amount">$12,193</td><td class="amount">12</td><td class="amount">AED 628</td></tr>
+        <tr><td>SGD</td><td><span class="tag xf">Xflow/PG</span></td><td class="amount">S$23,869</td><td class="amount">$17,662</td><td class="amount">4</td><td class="amount">S$328</td></tr>
+        <tr style="font-weight:700; background:#f5f6fa;"><td>Total</td><td></td><td class="amount"></td><td class="amount">$16,516,750</td><td class="amount">6,757</td><td class="amount">$164,751</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section-label">Currencycloud Detailed Breakdown</div>
+<div class="grid">
+  <div class="card full">
+    <table>
+      <thead>
+        <tr><th>Currency</th><th>Rail</th><th class="amount">Credits (Inbound)</th><th class="amount">Debits (Outbound)</th><th class="amount">Credit Txns</th><th class="amount">Debit Txns</th></tr>
+      </thead>
+      <tbody>
+        <tr style="background:#fff9e6;"><td>INR *</td><td><span class="tag cc">CC</span></td><td class="amount">₹404,739,574</td><td class="amount">₹404,733,478</td><td class="amount">2,706</td><td class="amount">2,898</td></tr>
+        <tr><td>USD</td><td><span class="tag cc">CC</span></td><td class="amount">$26,694,971</td><td class="amount">$26,318,627</td><td class="amount">16,196</td><td class="amount">12,767</td></tr>
+        <tr><td>GBP</td><td><span class="tag cc">CC</span></td><td class="amount">£11,293,174</td><td class="amount">£11,271,242</td><td class="amount">9,552</td><td class="amount">6,278</td></tr>
+        <tr><td>EUR</td><td><span class="tag cc">CC</span></td><td class="amount">€3,510,355</td><td class="amount">€3,493,158</td><td class="amount">5,101</td><td class="amount">3,389</td></tr>
+        <tr><td>THB</td><td><span class="tag cc">CC</span></td><td class="amount">฿1,010,853</td><td class="amount">฿1,010,721</td><td class="amount">13</td><td class="amount">11</td></tr>
+        <tr><td>CAD</td><td><span class="tag cc">CC</span></td><td class="amount">C$818,773</td><td class="amount">C$818,577</td><td class="amount">237</td><td class="amount">226</td></tr>
+        <tr><td>AED</td><td><span class="tag cc">CC</span></td><td class="amount">AED 527,513</td><td class="amount">AED 527,538</td><td class="amount">89</td><td class="amount">92</td></tr>
+        <tr><td>AUD</td><td><span class="tag cc">CC</span></td><td class="amount">A$321,590</td><td class="amount">A$321,445</td><td class="amount">78</td><td class="amount">72</td></tr>
+        <tr><td>SGD</td><td><span class="tag cc">CC</span></td><td class="amount">S$94,739</td><td class="amount">S$94,739</td><td class="amount">25</td><td class="amount">39</td></tr>
+        <tr><td>Others</td><td><span class="tag cc">CC</span></td><td class="amount">Various</td><td class="amount">Various</td><td class="amount">62</td><td class="amount">47</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px; color:#999; margin-top:12px;">* INR represents the conversion/payout leg. Foreign currency → INR conversions mean INR volume mirrors inbound foreign currency and should not be summed.</p>
+  </div>
+</div>
+
+<div class="section-label">Combined Platform Summary</div>
+<div class="grid">
+  <div class="card full">
+    <table>
+      <thead>
+        <tr><th>Component</th><th class="amount">USD-Equivalent Volume</th><th class="amount">Transactions</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Currencycloud — Foreign currency inbound</td><td class="amount">$45,800,000</td><td class="amount">34,059</td><td>USD, GBP, EUR, CAD, AUD, AED, SGD, THB, CHF + 13 others</td></tr>
+        <tr><td>Xflow/PayGlocal — Withdrawals/Payouts</td><td class="amount">$16,517,000</td><td class="amount">6,757</td><td>USD, EUR, GBP, CAD, CHF, AUD, AED, SGD</td></tr>
+        <tr style="font-weight:700; background:#e8f8f5;"><td>Total Platform Volume</td><td class="amount">$62,317,000</td><td class="amount">40,816</td><td>22 currencies, 2 payment rails</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Methodology & CV-safe claim:</strong><br><br>
+  <strong>Conservative (recommended for CV):</strong> "Processed $60M+ in cross-border payment volume across 22 currencies" — uses non-INR CC inbound + Xflow/PG, avoids double-counting the INR conversion leg.<br><br>
+  <strong>What NOT to claim:</strong> $900M — that sums raw amounts across all currencies including INR payouts (₹405M ≈ $4.9M, not $405M). The ₹ and $ amounts represent the same underlying payment, just different legs.<br><br>
+  <strong>FX rates used:</strong> GBP/USD 1.26, EUR/USD 1.09, CAD/USD 0.74, AUD/USD 0.65, AED/USD 0.27, SGD/USD 0.74, CHF/USD 1.10, THB/USD 0.028, INR/USD 0.012. Rates are approximate blended averages for the period.
+</div>
+
+</body>
+</html>

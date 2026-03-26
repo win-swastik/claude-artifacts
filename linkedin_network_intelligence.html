@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swastik Nigam — LinkedIn Network Intelligence</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #22223a;
+            --bg-header: #16213e;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888aa;
+            --text-accent: #64b5f6;
+            --accent-1: #4fc3f7;
+            --accent-2: #81c784;
+            --accent-3: #ffb74d;
+            --accent-4: #e57373;
+            --accent-5: #ba68c8;
+            --accent-6: #4dd0e1;
+            --accent-7: #aed581;
+            --accent-8: #ff8a65;
+            --positive: #66bb6a;
+            --negative: #ef5350;
+            --gap: 16px;
+            --radius: 12px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height:1.5; }
+        .dashboard { max-width:1440px; margin:0 auto; padding:20px; }
+        
+        /* Header */
+        .header { background: linear-gradient(135deg, #16213e 0%, #1a1a40 100%); border-radius: var(--radius); padding:28px 32px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border: 1px solid rgba(100,181,246,0.15); }
+        .header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .header h1 span { color: var(--accent-1); }
+        .header-sub { font-size:13px; color: var(--text-secondary); }
+        .tabs { display:flex; gap:4px; background: rgba(0,0,0,0.3); border-radius:8px; padding:4px; }
+        .tab { padding:8px 16px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; color:var(--text-secondary); transition:all 0.2s; border:none; background:none; }
+        .tab.active { background: var(--accent-1); color: #000; font-weight:600; }
+        .tab:hover:not(.active) { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        
+        /* KPIs */
+        .kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:var(--gap); margin-bottom:20px; }
+        .kpi { background: var(--bg-card); border-radius:var(--radius); padding:20px; border:1px solid rgba(255,255,255,0.05); transition: transform 0.2s; }
+        .kpi:hover { transform: translateY(-2px); border-color: rgba(100,181,246,0.2); }
+        .kpi-label { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:6px; }
+        .kpi-value { font-size:32px; font-weight:700; color:#fff; }
+        .kpi-sub { font-size:12px; color: var(--text-secondary); margin-top:4px; }
+        .kpi-accent { color: var(--accent-1); }
+        
+        /* Charts */
+        .chart-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:var(--gap); margin-bottom:20px; }
+        .chart-card { background: var(--bg-card); border-radius:var(--radius); padding:20px 24px; border:1px solid rgba(255,255,255,0.05); }
+        .chart-card.full { grid-column: 1 / -1; }
+        .chart-title { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:16px; }
+        .chart-title small { color: var(--text-secondary); font-weight:400; margin-left:8px; }
+        .chart-wrap { position:relative; height:300px; }
+        .chart-wrap.tall { height:400px; }
+        .chart-wrap.short { height:250px; }
+        
+        /* Tables */
+        .table-card { background:var(--bg-card); border-radius:var(--radius); padding:20px 24px; border:1px solid rgba(255,255,255,0.05); margin-bottom:20px; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { text-align:left; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; user-select:none; white-space:nowrap; }
+        th:hover { color: var(--accent-1); }
+        td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.03); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500; }
+        .badge-blue { background: rgba(79,195,247,0.15); color: var(--accent-1); }
+        .badge-green { background: rgba(129,199,132,0.15); color: var(--accent-2); }
+        .badge-orange { background: rgba(255,183,77,0.15); color: var(--accent-3); }
+        .badge-purple { background: rgba(186,104,200,0.15); color: var(--accent-5); }
+        
+        /* Insights */
+        .insights { background: linear-gradient(135deg, rgba(100,181,246,0.08), rgba(186,104,200,0.08)); border-radius: var(--radius); padding:24px 28px; margin-bottom:20px; border:1px solid rgba(100,181,246,0.15); }
+        .insights h2 { font-size:16px; margin-bottom:16px; color: var(--accent-1); }
+        .insight-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px; }
+        .insight-item { background: rgba(0,0,0,0.2); border-radius:8px; padding:16px; }
+        .insight-item h3 { font-size:13px; font-weight:600; color: var(--accent-3); margin-bottom:6px; }
+        .insight-item p { font-size:13px; color: var(--text-secondary); line-height:1.6; }
+        .insight-item .highlight { color: var(--text-primary); font-weight:500; }
+        
+        /* Sections */
+        .section { display:none; }
+        .section.active { display:block; }
+        
+        /* Bar for relationship strength */
+        .strength-bar { height:6px; border-radius:3px; background: rgba(255,255,255,0.05); position:relative; width:100px; display:inline-block; }
+        .strength-fill { height:100%; border-radius:3px; background: linear-gradient(90deg, var(--accent-1), var(--accent-5)); }
+        
+        /* Footer */
+        .footer { text-align:center; padding:20px; color: var(--text-secondary); font-size:12px; }
+        
+        @media (max-width:900px) {
+            .chart-grid { grid-template-columns: 1fr; }
+            .header { flex-direction:column; align-items:flex-start; }
+            .tabs { overflow-x:auto; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="header">
+        <div>
+            <h1><span>Swastik Nigam</span> — LinkedIn Network Intelligence</h1>
+            <div class="header-sub">9,594 connections analyzed across 20 years of networking &bull; Data exported Mar 24, 2026</div>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showSection('overview')">Overview</button>
+            <button class="tab" onclick="showSection('clusters')">Clusters</button>
+            <button class="tab" onclick="showSection('relationships')">Relationships</button>
+            <button class="tab" onclick="showSection('opportunities')">Opportunities</button>
+        </div>
+    </div>
+    
+    <!-- OVERVIEW -->
+    <div id="section-overview" class="section active">
+        <div class="kpi-row">
+            <div class="kpi"><div class="kpi-label">Total Connections</div><div class="kpi-value">9,594</div><div class="kpi-sub">Growing +1,300/yr since 2021</div></div>
+            <div class="kpi"><div class="kpi-label">Founders & CEOs</div><div class="kpi-value kpi-accent">3,391</div><div class="kpi-sub">35% of your network</div></div>
+            <div class="kpi"><div class="kpi-label">Investors & Fund Mgrs</div><div class="kpi-value" style="color:var(--accent-2)">337</div><div class="kpi-sub">3.5% — high-value cluster</div></div>
+            <div class="kpi"><div class="kpi-label">Messages Exchanged</div><div class="kpi-value" style="color:var(--accent-3)">10,581</div><div class="kpi-sub">3,098 sent by you</div></div>
+            <div class="kpi"><div class="kpi-label">With Email Access</div><div class="kpi-value" style="color:var(--accent-5)">310</div><div class="kpi-sub">Direct reachability</div></div>
+        </div>
+        
+        <div class="chart-grid">
+            <div class="chart-card full"><div class="chart-title">Network Growth Over Time <small>Connections added per year</small></div><div class="chart-wrap short"><canvas id="chart-growth"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Role Distribution</div><div class="chart-wrap"><canvas id="chart-roles"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Industry Distribution</div><div class="chart-wrap"><canvas id="chart-industry"></canvas></div></div>
+        </div>
+        
+        <div class="chart-grid">
+            <div class="chart-card full"><div class="chart-title">Monthly Connection Growth <small>Jan 2023 — Mar 2026</small></div><div class="chart-wrap short"><canvas id="chart-monthly"></canvas></div></div>
+        </div>
+    </div>
+    
+    <!-- CLUSTERS -->
+    <div id="section-clusters" class="section">
+        <div class="chart-grid">
+            <div class="chart-card"><div class="chart-title">Top 20 Organizations in Your Network</div><div class="chart-wrap tall"><canvas id="chart-companies"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Network Evolution by Era<small> Role mix over career phases</small></div><div class="chart-wrap tall"><canvas id="chart-era"></canvas></div></div>
+        </div>
+        <div class="insights">
+            <h2>Cluster Insights</h2>
+            <div class="insight-grid">
+                <div class="insight-item"><h3>Banking Heritage</h3><p>Your <span class="highlight">Deutsche Bank era (2015-18)</span> seeded 900+ connections heavily weighted toward C-Suite and Senior Leadership. This is your <span class="highlight">institutional credibility layer</span> — many now hold senior positions across global finance.</p></div>
+                <div class="insight-item"><h3>Founder Surge</h3><p>Since launching Winvesta in 2019, <span class="highlight">Founders & Entrepreneurs</span> became your fastest-growing cluster. You added 1,000+ founder connections in 2021-2023 alone — this is your <span class="highlight">startup ecosystem network</span>.</p></div>
+                <div class="insight-item"><h3>Investor Pocket</h3><p><span class="highlight">337 investors</span> including VCs, PE professionals, and angel investors. Names like IvyCap, ISV Capital, and ITI Growth are in your active messaging circle — a <span class="highlight">warm fundraising pipeline</span>.</p></div>
+                <div class="insight-item"><h3>Tech Talent Wave</h3><p>In 2024-26, <span class="highlight">Tech & Engineering</span> jumped to your 4th largest new-connection segment. This signals active hiring or partnership-building in the engineering community.</p></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RELATIONSHIPS -->
+    <div id="section-relationships" class="section">
+        <div class="chart-grid">
+            <div class="chart-card full"><div class="chart-title">Top 25 Deepest Relationships <small>by message volume</small></div><div class="chart-wrap tall"><canvas id="chart-messaged"></canvas></div></div>
+        </div>
+        <div class="table-card">
+            <div class="chart-title">Relationship Strength Table <small>Sorted by message volume — click headers to re-sort</small></div>
+            <table id="rel-table">
+                <thead><tr><th onclick="sortRelTable('name')">Name</th><th onclick="sortRelTable('total')">Messages</th><th onclick="sortRelTable('outbound')">You Sent</th><th onclick="sortRelTable('inbound')">Received</th><th onclick="sortRelTable('company')">Company</th><th onclick="sortRelTable('position')">Position</th><th onclick="sortRelTable('role')">Cluster</th></tr></thead>
+                <tbody id="rel-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- OPPORTUNITIES -->
+    <div id="section-opportunities" class="section">
+        <div class="insights">
+            <h2>Business Opportunity Map</h2>
+            <div class="insight-grid">
+                <div class="insight-item">
+                    <h3>1. Cross-Border Wealth for HNIs</h3>
+                    <p>You have <span class="highlight">685+ banking connections</span> and <span class="highlight">82 in payments/cards</span>. Many are senior (MD/Director level) at Citi, HSBC, Deutsche Bank, Goldman, JPMorgan. These people know HNIs who need cross-border financial services. <span class="highlight">Referral partnership programs</span> with your ex-colleagues could be a distribution channel.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>2. Fintech B2B Infrastructure</h3>
+                    <p>With <span class="highlight">166 fintech</span> and <span class="highlight">558 tech/startup</span> connections, you sit at the intersection. Many founders in your network are building products that need cross-border payment rails, KYC/AML, or multi-currency accounts. <span class="highlight">Winvesta as infrastructure (BaaS)</span> for other fintechs is a natural play.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>3. Investor Relations Pipeline</h3>
+                    <p>Your <span class="highlight">337 investors</span> span VCs (IvyCap, ISV Capital, ITI Growth), PE firms, and angels. You actively message ~15 of them. <span class="highlight">Warming up the other 320+</span> with periodic updates, market insights, or co-investment opportunities could unlock future fundraising rounds or strategic deals.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>4. Consulting & Advisory Revenue</h3>
+                    <p>Your <span class="highlight">417 consulting/advisory connections</span> (BCG, McKinsey, Deloitte, EY, Accenture) are often hired by banks and fintechs for digital transformation. Positioning Winvesta as a <span class="highlight">recommended vendor</span> in their implementation playbooks could drive enterprise deals.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>5. Deutsche Bank Alumni Network</h3>
+                    <p><span class="highlight">56 current DB connections</span> + many more alumni now at other firms. This is your <span class="highlight">strongest institutional cluster</span>. An alumni-focused initiative (newsletter, event, WhatsApp group) could activate warm intros across global finance.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>6. Content-Led Thought Leadership</h3>
+                    <p>With <span class="highlight">only 56 posts</span> but <span class="highlight">2,584 reactions given</span>, you're a generous engager but underpost relative to your network size. With 9,594 connections, even modest posting (~2x/week) about cross-border finance insights could generate significant inbound. Your <span class="highlight">engagement-to-content ratio</span> suggests high potential reach.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="insights" style="border-color: rgba(129,199,132,0.15); background: linear-gradient(135deg, rgba(129,199,132,0.05), rgba(100,181,246,0.05));">
+            <h2 style="color:var(--accent-2)">Untapped Cluster Leverage Points</h2>
+            <div class="insight-grid">
+                <div class="insight-item">
+                    <h3>IIM Ahmedabad Alumni</h3>
+                    <p>Your MBA network likely overlaps with many of your early connections (2006-2010). These 494 people are now <span class="highlight">16-20 years into their careers</span> — many are CXOs and partners. <span class="highlight">Reconnection campaign</span> targeting this cohort could yield high-impact intros.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>UK/London Finance Network</h3>
+                    <p>Your Deutsche Bank years in London built a significant <span class="highlight">UK-based financial services network</span>. With Winvesta enabling India-UK financial flows, this cluster is <span class="highlight">directly in your TAM</span>. Consider a London-focused event or dinner series.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>Payments Cluster (Mastercard, Visa)</h3>
+                    <p><span class="highlight">82 connections at Mastercard, Visa, PayPal</span> etc. These are potential <span class="highlight">strategic partnership targets</span> for Winvesta's payment infrastructure. Even one warm intro to the right product/partnership team could open up co-branded products.</p>
+                </div>
+                <div class="insight-item">
+                    <h3>The "Big Tech" Bridge</h3>
+                    <p><span class="highlight">129 connections at Google, Amazon, Microsoft, Meta</span>. Many are engineering and product leaders. If Winvesta ever needs <span class="highlight">enterprise distribution, API partnerships, or cloud deals</span>, these warm connections are starting points.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">LinkedIn Network Intelligence Dashboard &bull; Generated Mar 25, 2026 &bull; Data from LinkedIn export Mar 24, 2026</div>
+</div>
+
+<script>
+const D = {"total_connections": 9594, "connections_with_email": 310, "total_messages": 10581, "total_posts": 56, "total_comments": 171, "total_reactions": 2584, "growth_by_year": {"2006": 2, "2007": 107, "2008": 89, "2009": 101, "2010": 195, "2011": 186, "2012": 140, "2013": 110, "2014": 140, "2015": 157, "2016": 90, "2017": 122, "2018": 535, "2019": 537, "2020": 983, "2021": 1002, "2022": 1117, "2023": 1487, "2024": 1194, "2025": 1220, "2026": 80}, "monthly_growth": {"2023-01": 57, "2023-02": 64, "2023-03": 84, "2023-04": 71, "2023-05": 61, "2023-06": 81, "2023-07": 82, "2023-08": 47, "2023-09": 232, "2023-10": 246, "2023-11": 52, "2023-12": 410, "2024-01": 42, "2024-02": 103, "2024-03": 192, "2024-04": 51, "2024-05": 114, "2024-06": 14, "2024-07": 294, "2024-08": 69, "2024-09": 47, "2024-10": 77, "2024-11": 140, "2024-12": 51, "2025-01": 405, "2025-02": 62, "2025-03": 70, "2025-04": 43, "2025-05": 195, "2025-06": 70, "2025-07": 47, "2025-08": 144, "2025-09": 52, "2025-10": 70, "2025-11": 38, "2025-12": 24, "2026-01": 30, "2026-02": 17, "2026-03": 33}, "role_distribution": {"Other": 2016, "C-Suite": 1728, "Founders & Entrepreneurs": 1663, "Senior Leadership": 1004, "Tech & Engineering": 474, "Consulting & Advisory": 417, "Sales & BD": 414, "Directors & VPs": 412, "Investors & Fund Mgrs": 337, "Unknown": 311, "Banking & Finance": 255, "Product": 212, "Ops & Strategy": 199, "Marketing": 152}, "industry_distribution": {"Other": 6317, "VC / PE / Invest": 826, "Banking & Finance": 685, "Tech / Startups": 558, "Consulting & IT": 348, "Unknown": 313, "Independent / Stealth": 170, "Fintech": 166, "Big Tech": 129, "Payments & Cards": 82}, "top_companies": {"Deutsche Bank": 56, "Self-employed": 51, "Amazon": 41, "Citi": 40, "HSBC": 32, "Stealth Startup": 28, "EY": 27, "Freelance": 26, "Deloitte": 25, "Google": 23, "Axis Bank": 23, "Accenture": 22, "Bank of America": 22, "Mastercard": 21, "HDFC Bank": 19, "Boston Consulting Group (BCG)": 19, "YES BANK": 18, "Morgan Stanley": 17, "Kotak Mahindra Bank": 17, "Nomura": 16, "J.P. Morgan": 16, "Standard Chartered Bank": 16, "Goldman Sachs": 15, "Cognizant": 15, "ICICI Bank": 15}, "era_role_data": [{"era": "2006-2010", "role": "Banking & Finance", "count": 11}, {"era": "2006-2010", "role": "C-Suite", "count": 136}, {"era": "2006-2010", "role": "Consulting & Advisory", "count": 19}, {"era": "2006-2010", "role": "Directors & VPs", "count": 30}, {"era": "2006-2010", "role": "Founders & Entrepreneurs", "count": 45}, {"era": "2006-2010", "role": "Investors & Fund Mgrs", "count": 21}, {"era": "2006-2010", "role": "Marketing", "count": 5}, {"era": "2006-2010", "role": "Ops & Strategy", "count": 16}, {"era": "2006-2010", "role": "Other", "count": 111}, {"era": "2006-2010", "role": "Product", "count": 7}, {"era": "2006-2010", "role": "Sales & BD", "count": 2}, {"era": "2006-2010", "role": "Senior Leadership", "count": 62}, {"era": "2006-2010", "role": "Tech & Engineering", "count": 16}, {"era": "2006-2010", "role": "Unknown", "count": 13}, {"era": "2011-2014", "role": "Banking & Finance", "count": 18}, {"era": "2011-2014", "role": "C-Suite", "count": 134}, {"era": "2011-2014", "role": "Consulting & Advisory", "count": 29}, {"era": "2011-2014", "role": "Directors & VPs", "count": 25}, {"era": "2011-2014", "role": "Founders & Entrepreneurs", "count": 50}, {"era": "2011-2014", "role": "Investors & Fund Mgrs", "count": 27}, {"era": "2011-2014", "role": "Marketing", "count": 7}, {"era": "2011-2014", "role": "Ops & Strategy", "count": 13}, {"era": "2011-2014", "role": "Other", "count": 138}, {"era": "2011-2014", "role": "Product", "count": 4}, {"era": "2011-2014", "role": "Sales & BD", "count": 4}, {"era": "2011-2014", "role": "Senior Leadership", "count": 84}, {"era": "2011-2014", "role": "Tech & Engineering", "count": 17}, {"era": "2011-2014", "role": "Unknown", "count": 26}, {"era": "2015-2018", "role": "Banking & Finance", "count": 15}, {"era": "2015-2018", "role": "C-Suite", "count": 241}, {"era": "2015-2018", "role": "Consulting & Advisory", "count": 40}, {"era": "2015-2018", "role": "Directors & VPs", "count": 40}, {"era": "2015-2018", "role": "Founders & Entrepreneurs", "count": 179}, {"era": "2015-2018", "role": "Investors & Fund Mgrs", "count": 29}, {"era": "2015-2018", "role": "Marketing", "count": 4}, {"era": "2015-2018", "role": "Ops & Strategy", "count": 10}, {"era": "2015-2018", "role": "Other", "count": 148}, {"era": "2015-2018", "role": "Product", "count": 13}, {"era": "2015-2018", "role": "Sales & BD", "count": 16}, {"era": "2015-2018", "role": "Senior Leadership", "count": 122}, {"era": "2015-2018", "role": "Tech & Engineering", "count": 12}, {"era": "2015-2018", "role": "Unknown", "count": 35}, {"era": "2019-2020", "role": "Banking & Finance", "count": 37}, {"era": "2019-2020", "role": "C-Suite", "count": 358}, {"era": "2019-2020", "role": "Consulting & Advisory", "count": 53}, {"era": "2019-2020", "role": "Directors & VPs", "count": 62}, {"era": "2019-2020", "role": "Founders & Entrepreneurs", "count": 305}, {"era": "2019-2020", "role": "Investors & Fund Mgrs", "count": 44}, {"era": "2019-2020", "role": "Marketing", "count": 17}, {"era": "2019-2020", "role": "Ops & Strategy", "count": 31}, {"era": "2019-2020", "role": "Other", "count": 270}, {"era": "2019-2020", "role": "Product", "count": 23}, {"era": "2019-2020", "role": "Sales & BD", "count": 44}, {"era": "2019-2020", "role": "Senior Leadership", "count": 196}, {"era": "2019-2020", "role": "Tech & Engineering", "count": 22}, {"era": "2019-2020", "role": "Unknown", "count": 58}, {"era": "2021-2023", "role": "Banking & Finance", "count": 86}, {"era": "2021-2023", "role": "C-Suite", "count": 581}, {"era": "2021-2023", "role": "Consulting & Advisory", "count": 166}, {"era": "2021-2023", "role": "Directors & VPs", "count": 173}, {"era": "2021-2023", "role": "Founders & Entrepreneurs", "count": 643}, {"era": "2021-2023", "role": "Investors & Fund Mgrs", "count": 137}, {"era": "2021-2023", "role": "Marketing", "count": 64}, {"era": "2021-2023", "role": "Ops & Strategy", "count": 64}, {"era": "2021-2023", "role": "Other", "count": 763}, {"era": "2021-2023", "role": "Product", "count": 119}, {"era": "2021-2023", "role": "Sales & BD", "count": 191}, {"era": "2021-2023", "role": "Senior Leadership", "count": 354}, {"era": "2021-2023", "role": "Tech & Engineering", "count": 150}, {"era": "2021-2023", "role": "Unknown", "count": 115}, {"era": "2024-2026", "role": "Banking & Finance", "count": 88}, {"era": "2024-2026", "role": "C-Suite", "count": 278}, {"era": "2024-2026", "role": "Consulting & Advisory", "count": 110}, {"era": "2024-2026", "role": "Directors & VPs", "count": 82}, {"era": "2024-2026", "role": "Founders & Entrepreneurs", "count": 441}, {"era": "2024-2026", "role": "Investors & Fund Mgrs", "count": 79}, {"era": "2024-2026", "role": "Marketing", "count": 55}, {"era": "2024-2026", "role": "Ops & Strategy", "count": 65}, {"era": "2024-2026", "role": "Other", "count": 586}, {"era": "2024-2026", "role": "Product", "count": 46}, {"era": "2024-2026", "role": "Sales & BD", "count": 157}, {"era": "2024-2026", "role": "Senior Leadership", "count": 186}, {"era": "2024-2026", "role": "Tech & Engineering", "count": 257}, {"era": "2024-2026", "role": "Unknown", "count": 64}], "top_messaged": [{"name": "Akshit Zaveri", "total": 98, "inbound": 29, "outbound": 69, "company": "Winvesta ", "position": "Product Engineering Lead", "role": "Tech & Engineering", "industry": "Fintech"}, {"name": "Akshata Kulkarni Nigam", "total": 74, "inbound": 48, "outbound": 26, "company": "De Beers Group", "position": "Head of Ecommerce \u2013 De Beers Forevermark India", "role": "Senior Leadership", "industry": "Other"}, {"name": "Maryna Marynenko", "total": 69, "inbound": 49, "outbound": 20, "company": "OnePlusOne Solutions", "position": "Sales Manager", "role": "Sales & BD", "industry": "Other"}, {"name": "Hatim Janjali", "total": 65, "inbound": 0, "outbound": 65, "company": "Winvesta ", "position": "Marketing Lead", "role": "Marketing", "industry": "Fintech"}, {"name": "Alyona(Holly) Sakhniuk", "total": 59, "inbound": 42, "outbound": 17, "company": "Olearis", "position": "Senior IT Business Manager", "role": "Other", "industry": "Other"}, {"name": "Amit Mangal", "total": 55, "inbound": 41, "outbound": 14, "company": "Opulix Advisory Services", "position": "Managing Partner", "role": "Senior Leadership", "industry": "Other"}, {"name": "Vanessa Quadros", "total": 53, "inbound": 20, "outbound": 33, "company": "Winvesta ", "position": "Media marketer ", "role": "Other", "industry": "Fintech"}, {"name": "Shreya Rao", "total": 48, "inbound": 5, "outbound": 43, "company": "Side Quest", "position": "Founder", "role": "Founders & Entrepreneurs", "industry": "Other"}, {"name": "Christophe Lalo", "total": 47, "inbound": 22, "outbound": 25, "company": "8F Asset Management Pte.Ltd.", "position": "Senior Executive Officer", "role": "Other", "industry": "Other"}, {"name": "Jivraj Singh Sachar", "total": 44, "inbound": 28, "outbound": 16, "company": "Indian Silicon Valley Capital", "position": "Founder & General Partner (GP)", "role": "Founders & Entrepreneurs", "industry": "Consulting & IT"}, {"name": "Aashish Gupta", "total": 42, "inbound": 27, "outbound": 15, "company": "IvyCap Ventures", "position": "Sr. Vice president", "role": "Directors & VPs", "industry": "VC / PE / Invest"}, {"name": "Jeremy King", "total": 40, "inbound": 20, "outbound": 20, "company": "Ocean Orchestra", "position": "Co-Founder & CEO", "role": "Founders & Entrepreneurs", "industry": "Other"}, {"name": "Yojna Belani", "total": 38, "inbound": 23, "outbound": 15, "company": "Deutsche Bank", "position": "Corporate Cash Sales", "role": "Sales & BD", "industry": "Banking & Finance"}, {"name": "Akhilesh Prakhya", "total": 36, "inbound": 19, "outbound": 17, "company": "ITI Growth Opportunities Fund", "position": "Venture Partner", "role": "Senior Leadership", "industry": "VC / PE / Invest"}, {"name": "CFA", "total": 34, "inbound": 0, "outbound": 34, "company": "", "position": "", "role": "", "industry": ""}, {"name": "Robert Barrie", "total": 34, "inbound": 17, "outbound": 17, "company": "Labrys", "position": "Head of Payments and Web3", "role": "Senior Leadership", "industry": "Other"}, {"name": "Jigar Patel", "total": 33, "inbound": 11, "outbound": 22, "company": "Stealth", "position": "Investor", "role": "Investors & Fund Mgrs", "industry": "Independent / Stealth"}, {"name": "Shivram Ayyagari", "total": 32, "inbound": 18, "outbound": 14, "company": "Stealth", "position": "Founder", "role": "Founders & Entrepreneurs", "industry": "Independent / Stealth"}, {"name": "Rahul Gaitonde", "total": 30, "inbound": 16, "outbound": 14, "company": "FNDX", "position": "Founder", "role": "Founders & Entrepreneurs", "industry": "Other"}, {"name": "Neelesh Agrawal", "total": 30, "inbound": 16, "outbound": 14, "company": "Calculus Carbon", "position": "Chief Executive Officer", "role": "C-Suite", "industry": "Other"}, {"name": "Nikesh Sheth", "total": 28, "inbound": 16, "outbound": 12, "company": "Imaginarium", "position": "Head of Finance", "role": "Senior Leadership", "industry": "Other"}, {"name": "Saurabh Sancheti", "total": 28, "inbound": 12, "outbound": 16, "company": "Jio", "position": "Chief Financial Officer", "role": "C-Suite", "industry": "Other"}, {"name": "Stephane Farouze", "total": 26, "inbound": 9, "outbound": 17, "company": "8F Investment Partners", "position": "Founder & Chairman", "role": "Founders & Entrepreneurs", "industry": "VC / PE / Invest"}, {"name": "Anshul Sharma", "total": 26, "inbound": 13, "outbound": 13, "company": "Julius Baer", "position": "Portfolio Specialist", "role": "Investors & Fund Mgrs", "industry": "Other"}, {"name": "Andreas Westman", "total": 26, "inbound": 17, "outbound": 9, "company": "ZignSec", "position": "Vice president of Global Sales KYC ", "role": "Directors & VPs", "industry": "Other"}, {"name": "Richard Frank", "total": 26, "inbound": 10, "outbound": 16, "company": "Chip - your wealth app", "position": "INED", "role": "Other", "industry": "Other"}, {"name": "Denila Lobo", "total": 25, "inbound": 0, "outbound": 25, "company": "Winvesta ", "position": "Senior Marketing Specialist", "role": "Marketing", "industry": "Fintech"}, {"name": "Alejandro Bonano", "total": 25, "inbound": 15, "outbound": 10, "company": "Mizuho", "position": "Executive Director", "role": "C-Suite", "industry": "Other"}, {"name": "Sundeep Jakhar", "total": 25, "inbound": 17, "outbound": 8, "company": "ACCA", "position": "Head of Public Affairs - India", "role": "Senior Leadership", "industry": "Other"}, {"name": "Himanshu Nautiyal", "total": 25, "inbound": 14, "outbound": 11, "company": "", "position": "", "role": "", "industry": ""}, {"name": "Aarti Wadhwani", "total": 25, "inbound": 11, "outbound": 14, "company": "Cambridge Associates", "position": "Director, Recruiting - EMEA & APAC", "role": "C-Suite", "industry": "Other"}, {"name": "Yash Jain", "total": 24, "inbound": 14, "outbound": 10, "company": "Square Yards", "position": "AI Engineer", "role": "Tech & Engineering", "industry": "Other"}, {"name": "Sachin Bhorge", "total": 24, "inbound": 20, "outbound": 4, "company": "PI Industries Ltd", "position": "Head of Business Process Excellence & Value Realization", "role": "Senior Leadership", "industry": "Other"}, {"name": "Aditya Pinto", "total": 24, "inbound": 14, "outbound": 10, "company": "DSP Mutual Fund", "position": "Senior Manager - Strategic Alliances", "role": "Other", "industry": "VC / PE / Invest"}, {"name": "Ameet Gaikwad", "total": 23, "inbound": 10, "outbound": 13, "company": "Fintify", "position": "CEO | Co-Founder", "role": "Founders & Entrepreneurs", "industry": "Other"}, {"name": "Sanket Dantara", "total": 23, "inbound": 16, "outbound": 7, "company": "Mastercard", "position": "Vice President (Principal) Services Business Lead - South Asia ", "role": "Directors & VPs", "industry": "Payments & Cards"}, {"name": "Surya Haridass", "total": 22, "inbound": 20, "outbound": 2, "company": "Scopeyard Solutions ", "position": "Business Development Executive", "role": "Sales & BD", "industry": "Consulting & IT"}, {"name": "Suman Sarkar", "total": 22, "inbound": 20, "outbound": 2, "company": "Fundznest Financial Services", "position": "Co-Founder & Managing Partner", "role": "Founders & Entrepreneurs", "industry": "VC / PE / Invest"}, {"name": "Deven Parulekar", "total": 22, "inbound": 8, "outbound": 14, "company": "Invigrid Inc", "position": "Advisor", "role": "Consulting & Advisory", "industry": "Other"}, {"name": "Sarthak Biswas", "total": 22, "inbound": 12, "outbound": 10, "company": "Columbia Business School", "position": "MBA Candidate", "role": "Other", "industry": "Other"}], "role_industry_matrix": [{"role": "Banking & Finance", "industry": "Banking & Finance", "count": 62}, {"role": "Banking & Finance", "industry": "Big Tech", "count": 2}, {"role": "Banking & Finance", "industry": "Consulting & IT", "count": 17}, {"role": "Banking & Finance", "industry": "Fintech", "count": 7}, {"role": "Banking & Finance", "industry": "Independent / Stealth", "count": 2}, {"role": "Banking & Finance", "industry": "Other", "count": 131}, {"role": "Banking & Finance", "industry": "Payments & Cards", "count": 2}, {"role": "Banking & Finance", "industry": "Tech / Startups", "count": 10}, {"role": "Banking & Finance", "industry": "VC / PE / Invest", "count": 22}, {"role": "C-Suite", "industry": "Banking & Finance", "count": 176}, {"role": "C-Suite", "industry": "Big Tech", "count": 15}, {"role": "C-Suite", "industry": "Consulting & IT", "count": 50}, {"role": "C-Suite", "industry": "Fintech", "count": 26}, {"role": "C-Suite", "industry": "Independent / Stealth", "count": 11}, {"role": "C-Suite", "industry": "Other", "count": 1191}, {"role": "C-Suite", "industry": "Payments & Cards", "count": 16}, {"role": "C-Suite", "industry": "Tech / Startups", "count": 99}, {"role": "C-Suite", "industry": "VC / PE / Invest", "count": 144}, {"role": "Consulting & Advisory", "industry": "Banking & Finance", "count": 13}, {"role": "Consulting & Advisory", "industry": "Big Tech", "count": 1}, {"role": "Consulting & Advisory", "industry": "Consulting & IT", "count": 64}, {"role": "Consulting & Advisory", "industry": "Fintech", "count": 2}, {"role": "Consulting & Advisory", "industry": "Independent / Stealth", "count": 36}, {"role": "Consulting & Advisory", "industry": "Other", "count": 254}, {"role": "Consulting & Advisory", "industry": "Payments & Cards", "count": 4}, {"role": "Consulting & Advisory", "industry": "Tech / Startups", "count": 23}, {"role": "Consulting & Advisory", "industry": "Unknown", "count": 1}, {"role": "Consulting & Advisory", "industry": "VC / PE / Invest", "count": 19}, {"role": "Directors & VPs", "industry": "Banking & Finance", "count": 106}, {"role": "Directors & VPs", "industry": "Big Tech", "count": 2}, {"role": "Directors & VPs", "industry": "Consulting & IT", "count": 12}, {"role": "Directors & VPs", "industry": "Fintech", "count": 6}, {"role": "Directors & VPs", "industry": "Independent / Stealth", "count": 1}, {"role": "Directors & VPs", "industry": "Other", "count": 203}, {"role": "Directors & VPs", "industry": "Payments & Cards", "count": 8}, {"role": "Directors & VPs", "industry": "Tech / Startups", "count": 24}, {"role": "Directors & VPs", "industry": "VC / PE / Invest", "count": 50}, {"role": "Founders & Entrepreneurs", "industry": "Banking & Finance", "count": 8}, {"role": "Founders & Entrepreneurs", "industry": "Big Tech", "count": 1}, {"role": "Founders & Entrepreneurs", "industry": "Consulting & IT", "count": 21}, {"role": "Founders & Entrepreneurs", "industry": "Fintech", "count": 29}, {"role": "Founders & Entrepreneurs", "industry": "Independent / Stealth", "count": 39}, {"role": "Founders & Entrepreneurs", "industry": "Other", "count": 1282}, {"role": "Founders & Entrepreneurs", "industry": "Payments & Cards", "count": 5}, {"role": "Founders & Entrepreneurs", "industry": "Tech / Startups", "count": 130}, {"role": "Founders & Entrepreneurs", "industry": "VC / PE / Invest", "count": 148}, {"role": "Investors & Fund Mgrs", "industry": "Banking & Finance", "count": 36}, {"role": "Investors & Fund Mgrs", "industry": "Consulting & IT", "count": 7}, {"role": "Investors & Fund Mgrs", "industry": "Fintech", "count": 6}, {"role": "Investors & Fund Mgrs", "industry": "Independent / Stealth", "count": 9}, {"role": "Investors & Fund Mgrs", "industry": "Other", "count": 155}, {"role": "Investors & Fund Mgrs", "industry": "Tech / Startups", "count": 11}, {"role": "Investors & Fund Mgrs", "industry": "VC / PE / Invest", "count": 113}, {"role": "Marketing", "industry": "Banking & Finance", "count": 3}, {"role": "Marketing", "industry": "Big Tech", "count": 6}, {"role": "Marketing", "industry": "Consulting & IT", "count": 4}, {"role": "Marketing", "industry": "Fintech", "count": 5}, {"role": "Marketing", "industry": "Independent / Stealth", "count": 3}, {"role": "Marketing", "industry": "Other", "count": 116}, {"role": "Marketing", "industry": "Tech / Startups", "count": 13}, {"role": "Marketing", "industry": "VC / PE / Invest", "count": 2}, {"role": "Ops & Strategy", "industry": "Banking & Finance", "count": 11}, {"role": "Ops & Strategy", "industry": "Big Tech", "count": 13}, {"role": "Ops & Strategy", "industry": "Consulting & IT", "count": 7}, {"role": "Ops & Strategy", "industry": "Fintech", "count": 8}, {"role": "Ops & Strategy", "industry": "Independent / Stealth", "count": 2}, {"role": "Ops & Strategy", "industry": "Other", "count": 140}, {"role": "Ops & Strategy", "industry": "Payments & Cards", "count": 3}, {"role": "Ops & Strategy", "industry": "Tech / Startups", "count": 11}, {"role": "Ops & Strategy", "industry": "VC / PE / Invest", "count": 4}, {"role": "Other", "industry": "Banking & Finance", "count": 155}, {"role": "Other", "industry": "Big Tech", "count": 41}, {"role": "Other", "industry": "Consulting & IT", "count": 96}, {"role": "Other", "industry": "Fintech", "count": 27}, {"role": "Other", "industry": "Independent / Stealth", "count": 46}, {"role": "Other", "industry": "Other", "count": 1414}, {"role": "Other", "industry": "Payments & Cards", "count": 21}, {"role": "Other", "industry": "Tech / Startups", "count": 94}, {"role": "Other", "industry": "VC / PE / Invest", "count": 122}, {"role": "Product", "industry": "Banking & Finance", "count": 16}, {"role": "Product", "industry": "Big Tech", "count": 14}, {"role": "Product", "industry": "Consulting & IT", "count": 6}, {"role": "Product", "industry": "Fintech", "count": 4}, {"role": "Product", "industry": "Independent / Stealth", "count": 2}, {"role": "Product", "industry": "Other", "count": 150}, {"role": "Product", "industry": "Payments & Cards", "count": 5}, {"role": "Product", "industry": "Tech / Startups", "count": 11}, {"role": "Product", "industry": "VC / PE / Invest", "count": 4}, {"role": "Sales & BD", "industry": "Banking & Finance", "count": 13}, {"role": "Sales & BD", "industry": "Big Tech", "count": 9}, {"role": "Sales & BD", "industry": "Consulting & IT", "count": 9}, {"role": "Sales & BD", "industry": "Fintech", "count": 7}, {"role": "Sales & BD", "industry": "Independent / Stealth", "count": 1}, {"role": "Sales & BD", "industry": "Other", "count": 327}, {"role": "Sales & BD", "industry": "Payments & Cards", "count": 5}, {"role": "Sales & BD", "industry": "Tech / Startups", "count": 31}, {"role": "Sales & BD", "industry": "VC / PE / Invest", "count": 12}, {"role": "Senior Leadership", "industry": "Banking & Finance", "count": 71}, {"role": "Senior Leadership", "industry": "Big Tech", "count": 8}, {"role": "Senior Leadership", "industry": "Consulting & IT", "count": 33}, {"role": "Senior Leadership", "industry": "Fintech", "count": 27}, {"role": "Senior Leadership", "industry": "Independent / Stealth", "count": 8}, {"role": "Senior Leadership", "industry": "Other", "count": 631}, {"role": "Senior Leadership", "industry": "Payments & Cards", "count": 10}, {"role": "Senior Leadership", "industry": "Tech / Startups", "count": 36}, {"role": "Senior Leadership", "industry": "VC / PE / Invest", "count": 180}, {"role": "Tech & Engineering", "industry": "Banking & Finance", "count": 15}, {"role": "Tech & Engineering", "industry": "Big Tech", "count": 17}, {"role": "Tech & Engineering", "industry": "Consulting & IT", "count": 22}, {"role": "Tech & Engineering", "industry": "Fintech", "count": 12}, {"role": "Tech & Engineering", "industry": "Independent / Stealth", "count": 9}, {"role": "Tech & Engineering", "industry": "Other", "count": 323}, {"role": "Tech & Engineering", "industry": "Payments & Cards", "count": 3}, {"role": "Tech & Engineering", "industry": "Tech / Startups", "count": 65}, {"role": "Tech & Engineering", "industry": "Unknown", "count": 2}, {"role": "Tech & Engineering", "industry": "VC / PE / Invest", "count": 6}, {"role": "Unknown", "industry": "Independent / Stealth", "count": 1}, {"role": "Unknown", "industry": "Unknown", "count": 310}]};
+
+const COLORS = ['#4fc3f7','#81c784','#ffb74d','#e57373','#ba68c8','#4dd0e1','#aed581','#ff8a65','#90caf9','#fff176','#f48fb1','#80deea','#c5e1a5','#ffcc80'];
+
+function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+// === OVERVIEW CHARTS ===
+// Growth by year
+new Chart(document.getElementById('chart-growth'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(D.growth_by_year),
+        datasets: [{
+            label: 'New connections',
+            data: Object.values(D.growth_by_year),
+            backgroundColor: Object.keys(D.growth_by_year).map((y,i) => {
+                if (y <= 2010) return '#4fc3f7aa';
+                if (y <= 2014) return '#81c784aa';
+                if (y <= 2018) return '#ffb74daa';
+                if (y <= 2020) return '#e57373aa';
+                if (y <= 2023) return '#ba68c8aa';
+                return '#4dd0e1aa';
+            }),
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: {
+            legend:{display:false},
+            tooltip:{callbacks:{label:c=>`${c.parsed.y} new connections`}}
+        },
+        scales: { x:{grid:{display:false},ticks:{color:'#8888aa'}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa'}} }
+    }
+});
+
+// Monthly growth
+new Chart(document.getElementById('chart-monthly'), {
+    type: 'line',
+    data: {
+        labels: Object.keys(D.monthly_growth),
+        datasets: [{
+            label: 'Monthly new connections',
+            data: Object.values(D.monthly_growth),
+            borderColor: '#4fc3f7',
+            backgroundColor: 'rgba(79,195,247,0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+        }]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false} },
+        scales: { x:{grid:{display:false},ticks:{color:'#8888aa',maxRotation:45}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa'}} }
+    }
+});
+
+// Role distribution
+const roleLabels = Object.keys(D.role_distribution).filter(k=>k!=='Unknown');
+const roleData = roleLabels.map(k=>D.role_distribution[k]);
+new Chart(document.getElementById('chart-roles'), {
+    type: 'doughnut',
+    data: {
+        labels: roleLabels,
+        datasets: [{ data: roleData, backgroundColor: COLORS.map(c=>c+'cc'), borderColor:'#1a1a2e', borderWidth:2 }]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false, cutout:'55%',
+        plugins: {
+            legend: { position:'right', labels:{color:'#ccc',usePointStyle:true,padding:8,font:{size:11}} },
+            tooltip: { callbacks: { label: c => { const t=c.dataset.data.reduce((a,b)=>a+b,0); return `${c.label}: ${c.parsed} (${((c.parsed/t)*100).toFixed(1)}%)`; }}}
+        }
+    }
+});
+
+// Industry distribution
+const indLabels = Object.keys(D.industry_distribution).filter(k=>k!=='Unknown' && k!=='Other');
+const indData = indLabels.map(k=>D.industry_distribution[k]);
+new Chart(document.getElementById('chart-industry'), {
+    type: 'doughnut',
+    data: {
+        labels: indLabels,
+        datasets: [{ data: indData, backgroundColor: COLORS.slice(3).concat(COLORS.slice(0,3)).map(c=>c+'cc'), borderColor:'#1a1a2e', borderWidth:2 }]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false, cutout:'55%',
+        plugins: {
+            legend: { position:'right', labels:{color:'#ccc',usePointStyle:true,padding:8,font:{size:11}} },
+            tooltip: { callbacks: { label: c => { const t=c.dataset.data.reduce((a,b)=>a+b,0); return `${c.label}: ${c.parsed} (${((c.parsed/t)*100).toFixed(1)}%)`; }}}
+        }
+    }
+});
+
+// === CLUSTER CHARTS ===
+// Top companies horizontal bar
+const compLabels = Object.keys(D.top_companies).slice(0,20).reverse();
+const compData = compLabels.map(k=>D.top_companies[k]);
+new Chart(document.getElementById('chart-companies'), {
+    type: 'bar',
+    data: { labels: compLabels, datasets: [{ data: compData, backgroundColor: '#4fc3f7aa', borderRadius:4 }] },
+    options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales: { x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa'}}, y:{grid:{display:false},ticks:{color:'#ccc',font:{size:11}}} }
+    }
+});
+
+// Era stacked bar
+const eras = ['2006-2010','2011-2014','2015-2018','2019-2020','2021-2023','2024-2026'];
+const mainRoles = ['Founders & Entrepreneurs','C-Suite','Senior Leadership','Tech & Engineering','Investors & Fund Mgrs','Sales & BD','Consulting & Advisory','Banking & Finance','Directors & VPs','Other'];
+const eraDatasets = mainRoles.map((role,i) => ({
+    label: role,
+    data: eras.map(era => {
+        const match = D.era_role_data.find(d => d.era === era && d.role === role);
+        return match ? match.count : 0;
+    }),
+    backgroundColor: COLORS[i % COLORS.length] + 'cc',
+}));
+new Chart(document.getElementById('chart-era'), {
+    type: 'bar',
+    data: { labels: eras, datasets: eraDatasets },
+    options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend: { position:'bottom', labels:{color:'#ccc',usePointStyle:true,padding:8,font:{size:10}} } },
+        scales: { x:{stacked:true,grid:{display:false},ticks:{color:'#8888aa'}}, y:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa'}} }
+    }
+});
+
+// === RELATIONSHIPS ===
+const topMsg = D.top_messaged.filter(d=>d.name!=='LinkedIn Member').slice(0,25);
+new Chart(document.getElementById('chart-messaged'), {
+    type: 'bar',
+    data: {
+        labels: topMsg.map(d=>d.name),
+        datasets: [
+            { label:'You sent', data: topMsg.map(d=>d.outbound), backgroundColor:'#4fc3f7aa', borderRadius:4 },
+            { label:'Received', data: topMsg.map(d=>d.inbound), backgroundColor:'#ba68c8aa', borderRadius:4 },
+        ]
+    },
+    options: {
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{position:'top',labels:{color:'#ccc',usePointStyle:true}} },
+        scales: { x:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa'}}, y:{stacked:true,grid:{display:false},ticks:{color:'#ccc',font:{size:11}}} }
+    }
+});
+
+// Relationship table
+let relSortCol = 'total', relSortDir = 'desc';
+function renderRelTable() {
+    const data = [...D.top_messaged].filter(d=>d.name!=='LinkedIn Member');
+    data.sort((a,b) => {
+        let av = a[relSortCol], bv = b[relSortCol];
+        if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+        return relSortDir === 'desc' ? (bv > av ? 1 : -1) : (av > bv ? 1 : -1);
+    });
+    const tbody = document.getElementById('rel-tbody');
+    const badgeClass = r => {
+        if (r.includes('Founder') || r.includes('C-Suite')) return 'badge-blue';
+        if (r.includes('Investor')) return 'badge-green';
+        if (r.includes('Sales') || r.includes('BD')) return 'badge-orange';
+        return 'badge-purple';
+    };
+    tbody.innerHTML = data.map(d => `<tr>
+        <td><strong>${d.name}</strong></td>
+        <td>${d.total}</td>
+        <td>${d.outbound}</td>
+        <td>${d.inbound}</td>
+        <td>${d.company}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.position}</td>
+        <td><span class="badge ${badgeClass(d.role)}">${d.role}</span></td>
+    </tr>`).join('');
+}
+function sortRelTable(col) {
+    if (relSortCol === col) relSortDir = relSortDir === 'desc' ? 'asc' : 'desc';
+    else { relSortCol = col; relSortDir = 'desc'; }
+    renderRelTable();
+}
+renderRelTable();
+</script>
+</body>
+</html>

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Task Completion Dashboard - Last 30 Days</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+    <style>
+        :root {
+            --bg-primary: #f5f7fa;
+            --bg-card: #ffffff;
+            --bg-header: #1e293b;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-on-dark: #ffffff;
+            --color-1: #3b82f6;
+            --color-2: #10b981;
+            --color-3: #f59e0b;
+            --color-4: #ef4444;
+            --color-5: #8b5cf6;
+            --color-6: #ec4899;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --warning: #f59e0b;
+            --gap: 20px;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: var(--gap);
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #334155 100%);
+            color: var(--text-on-dark);
+            padding: 32px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-header .subtitle {
+            font-size: 15px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-on-dark);
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .filter-group select option {
+            background: var(--bg-header);
+            color: var(--text-on-dark);
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .kpi-change {
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.positive { color: var(--positive); }
+        .kpi-change.negative { color: var(--negative); }
+        .kpi-change.warning { color: var(--warning); }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .chart-container canvas {
+            max-height: 350px;
+        }
+
+        .table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            margin-bottom: var(--gap);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 2px solid #e2e8f0;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table thead th:hover {
+            color: var(--text-primary);
+            background: #f8fafc;
+        }
+
+        .data-table tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-complete { background: #d1fae5; color: #065f46; }
+        .status-progress { background: #dbeafe; color: #1e40af; }
+        .status-review { background: #fef3c7; color: #92400e; }
+        .status-paused { background: #f3f4f6; color: #374151; }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .priority-urgent { background: #fee2e2; color: #991b1b; }
+        .priority-high { background: #fed7aa; color: #9a3412; }
+        .priority-medium { background: #fef3c7; color: #92400e; }
+        .priority-low { background: #d1fae5; color: #065f46; }
+
+        .insight-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--color-1);
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: var(--gap);
+        }
+
+        .insight-box h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .insight-box ul {
+            margin-left: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .insight-box li {
+            margin-bottom: 6px;
+        }
+
+        .dashboard-footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>📊 Team Task Completion Analysis</h1>
+            <div class="subtitle">Performance Overview: January 6 - February 5, 2026 (Last 30 Days)</div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Team</label>
+                    <select id="filter-team" onchange="dashboard.applyFilters()">
+                        <option value="all">All Teams</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Assignee</label>
+                    <select id="filter-assignee" onchange="dashboard.applyFilters()">
+                        <option value="all">All Team Members</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-status" onchange="dashboard.applyFilters()">
+                        <option value="all">All Statuses</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Priority</label>
+                    <select id="filter-priority" onchange="dashboard.applyFilters()">
+                        <option value="all">All Priorities</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <div class="insight-box">
+            <h3>🔍 Key Insights</h3>
+            <ul id="insights-list">
+                <li>Loading insights...</li>
+            </ul>
+        </div>
+
+        <section class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Tasks</div>
+                <div class="kpi-value" id="kpi-total">0</div>
+                <div class="kpi-change" id="kpi-total-change">Created in period</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Completed</div>
+                <div class="kpi-value" id="kpi-completed">0</div>
+                <div class="kpi-change positive" id="kpi-completed-rate">0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">In Progress</div>
+                <div class="kpi-value" id="kpi-progress">0</div>
+                <div class="kpi-change" id="kpi-progress-rate">0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Avg Completion Time</div>
+                <div class="kpi-value" id="kpi-avg-time">0d</div>
+                <div class="kpi-change" id="kpi-time-note">From start to finish</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">On-Time Rate</div>
+                <div class="kpi-value" id="kpi-ontime">0%</div>
+                <div class="kpi-change" id="kpi-ontime-count">0 of 0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Overdue Tasks</div>
+                <div class="kpi-value" id="kpi-overdue">0</div>
+                <div class="kpi-change negative" id="kpi-overdue-rate">0%</div>
+            </div>
+        </section>
+
+        <section class="chart-row">
+            <div class="chart-container">
+                <h3 class="chart-title">Task Status Distribution</h3>
+                <canvas id="status-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Priority Breakdown</h3>
+                <canvas id="priority-chart"></canvas>
+            </div>
+        </section>
+
+        <section class="chart-row">
+            <div class="chart-container full-width">
+                <h3 class="chart-title">
+                    Team Member Performance
+                    <span class="chart-subtitle">Tasks by assignee</span>
+                </h3>
+                <canvas id="assignee-chart"></canvas>
+            </div>
+        </section>
+
+        <section class="chart-row">
+            <div class="chart-container">
+                <h3 class="chart-title">Timeline Adherence</h3>
+                <canvas id="timeline-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Product Category Distribution</h3>
+                <canvas id="product-chart"></canvas>
+            </div>
+        </section>
+
+        <section class="chart-row">
+            <div class="chart-container full-width">
+                <h3 class="chart-title">
+                    Team Distribution
+                    <span class="chart-subtitle">Tasks by team</span>
+                </h3>
+                <canvas id="team-chart"></canvas>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <h3 class="chart-title" style="margin-bottom: 16px;">Detailed Task List</h3>
+            <div id="task-table"></div>
+        </section>
+
+        <footer class="dashboard-footer">
+            Data as of: <span id="data-date">February 5, 2026</span> |
+            Source: Notion All Company Tasks Database
+        </footer>
+    </div>
+
+    <script>
+        // Task data from Notion (last 30 days: Jan 6 - Feb 5, 2026)
+        const TASK_DATA = [
+            { title: "ETF substack content n8n workflow", assignee: "Denila", status: "Complete", priority: "High", team: "Marketing", product: ["IA"], created: "2026-01-13", due: "2026-01-14", completed: "2026-02-04", days_behind: -21 },
+            { title: "Create a growth dashboard to track lead conversion gaps", assignee: "Muskaan", status: "Complete", priority: "Urgent", team: "Marketing", product: ["GCA"], created: "2026-01-16", due: "2026-01-16", completed: "2026-01-20", days_behind: -4 },
+            { title: "Create onboarding leads tracker", assignee: "Muskaan", status: "Complete", priority: "Urgent", team: "Marketing", product: ["GCA"], created: "2026-01-31", due: "2026-01-31", completed: "2026-01-31", days_behind: 0 },
+            { title: "Connect Meta ads MCP into claude", assignee: "Hatim", status: "Complete", priority: "High", team: "Marketing", product: ["GCA & IA"], created: "2026-01-07", due: "2026-01-07", completed: "2026-01-07", days_behind: 0 },
+            { title: "Analyse all IA customer problem", assignee: "Krish", status: "Complete", priority: "High", team: "Customer Delight", product: ["IA"], created: "2026-01-07", due: "2026-01-08", completed: "2026-01-08", days_behind: 0 },
+            { title: "Customer Delight: BAU", assignee: "Krish", status: "Complete", priority: "Medium", team: "Customer Delight", product: ["GCA & IA"], created: "2026-01-06", due: "2026-01-06", completed: "2026-01-06", days_behind: 0 },
+            { title: "IA App Push notification agent", assignee: "Denila", status: "In Progress", priority: "Medium", team: "Marketing", product: ["IA"], created: "2026-01-06", due: "2026-01-09", completed: null, days_overdue: 27 },
+            { title: "Prep relaunch strategy", assignee: "Hatim", status: "Doing Now", priority: "Urgent", team: "Marketing", product: ["GCA"], created: "2026-01-09", due: "2026-01-12", completed: null, days_overdue: 24 },
+            { title: "Agentic AI Content Creation", assignee: "Raahil", status: "Review", priority: "Medium", team: "Marketing", product: null, created: "2026-01-09", due: null, completed: null },
+            { title: "Content Creation for SEO Cluster Expansion", assignee: "Raahil", status: "In Progress", priority: "High", team: "Marketing", product: null, created: "2026-01-22", due: null, completed: null },
+            { title: "Deactivate Gmail accesss: Nisha Rana", assignee: "Akshit", status: "Complete", priority: "High", team: "Operations", product: null, created: "2025-12-31", due: "2025-12-31", completed: "2026-01-07", days_behind: -7 },
+            { title: "Deactivate Gmail- Vanessa Quadros", assignee: "Akshit", status: "Complete", priority: "High", team: "Operations", product: null, created: "2026-01-30", due: null, completed: "2026-02-03" },
+            { title: "Deactivate Slack - Vanessa Quadros", assignee: "Akshit", status: "Complete", priority: "Medium", team: "Operations", product: null, created: "2026-01-30", due: "2026-01-30", completed: "2026-02-03", days_behind: -3 },
+            { title: "Tanglin Venture Partners", assignee: "Samaira", status: "Complete", priority: "High", team: "sales", product: null, created: "2026-01-15", due: null, completed: "2026-01-15" },
+            { title: "InnoVen Capital", assignee: "Samaira", status: "Complete", priority: "High", team: "sales", product: null, created: "2026-01-15", due: null, completed: "2026-01-15" },
+            { title: "iSeed Ventures", assignee: "Samaira", status: "Complete", priority: "High", team: "sales", product: null, created: "2026-01-15", due: null, completed: "2026-01-15" },
+            { title: "Campus Sutra Deck", assignee: "Samaira", status: "Complete", priority: "High", team: "sales", product: null, created: "2026-01-15", due: null, completed: "2026-01-15" },
+            { title: "Mosaic Wellness Deck", assignee: "Samaira", status: "Complete", priority: "High", team: "sales", product: null, created: "2026-01-15", due: null, completed: "2026-01-15" },
+            { title: "Explore code rabbit", assignee: "Akshit", status: "Archived", priority: "Urgent", team: "Tech", product: null, created: "2026-01-07", due: null, completed: null },
+            { title: "Default Credits to Workspaces", assignee: "Taikhum", status: "In Progress", priority: "High", team: "Tech", product: ["Winnit"], created: "2026-01-28", due: null, completed: null },
+            { title: "Cross Conversation Memory", assignee: "Taikhum", status: "Not Started", priority: "High", team: "Tech", product: ["Winnit"], created: "2026-02-04", due: null, completed: null },
+            { title: "Forking of Chats", assignee: "Taikhum", status: "Not Started", priority: "Medium", team: "Tech", product: ["Winnit"], created: "2026-02-04", due: null, completed: null },
+            { title: "Setup n8n Workflow For Feedback", assignee: "Denila", status: "Not Started", priority: "Medium", team: "Marketing", product: ["Winnit"], created: "2026-02-03", due: null, completed: null },
+            { title: "Create a deck for SaffronStay", assignee: "Samaira", status: "Not Started", priority: "Medium", team: "sales", product: ["GCA"], created: "2026-02-04", due: null, completed: null },
+            { title: "Winnit Support Agent Knowledge Base", assignee: "Hatim", status: "Not Started", priority: "High", team: "Marketing", product: ["Winnit"], created: "2026-02-04", due: null, completed: null }
+        ];
+
+        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+        class Dashboard {
+            constructor(data) {
+                this.rawData = data;
+                this.filteredData = data;
+                this.charts = {};
+                this.init();
+            }
+
+            init() {
+                this.populateFilters();
+                this.renderAll();
+            }
+
+            populateFilters() {
+                const teams = [...new Set(this.rawData.map(d => d.team).filter(Boolean))].sort();
+                const assignees = [...new Set(this.rawData.map(d => d.assignee).filter(Boolean))].sort();
+                const statuses = [...new Set(this.rawData.map(d => d.status).filter(Boolean))].sort();
+                const priorities = [...new Set(this.rawData.map(d => d.priority).filter(Boolean))].sort();
+
+                this.populateSelect('filter-team', teams);
+                this.populateSelect('filter-assignee', assignees);
+                this.populateSelect('filter-status', statuses);
+                this.populateSelect('filter-priority', priorities);
+            }
+
+            populateSelect(id, values) {
+                const select = document.getElementById(id);
+                values.forEach(val => {
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = val;
+                    select.appendChild(option);
+                });
+            }
+
+            applyFilters() {
+                const team = document.getElementById('filter-team').value;
+                const assignee = document.getElementById('filter-assignee').value;
+                const status = document.getElementById('filter-status').value;
+                const priority = document.getElementById('filter-priority').value;
+
+                this.filteredData = this.rawData.filter(row => {
+                    if (team !== 'all' && row.team !== team) return false;
+                    if (assignee !== 'all' && row.assignee !== assignee) return false;
+                    if (status !== 'all' && row.status !== status) return false;
+                    if (priority !== 'all' && row.priority !== priority) return false;
+                    return true;
+                });
+
+                this.renderAll();
+            }
+
+            renderAll() {
+                this.renderKPIs();
+                this.renderInsights();
+                this.renderCharts();
+                this.renderTable();
+            }
+
+            renderKPIs() {
+                const data = this.filteredData;
+                const total = data.length;
+                const completed = data.filter(d => d.status === 'Complete').length;
+                const inProgress = data.filter(d => d.status === 'In Progress' || d.status === 'Doing Now').length;
+                const overdue = data.filter(d => d.days_overdue > 0 || (d.status === 'Complete' && d.days_behind < 0)).length;
+
+                const completedTasks = data.filter(d => d.status === 'Complete' && d.days_behind !== undefined);
+                const onTime = completedTasks.filter(d => d.days_behind === 0).length;
+                const onTimeRate = completedTasks.length > 0 ? (onTime / completedTasks.length * 100) : 0;
+
+                const avgDays = completedTasks.length > 0
+                    ? completedTasks.reduce((sum, d) => {
+                        if (d.created && d.completed) {
+                            const start = new Date(d.created);
+                            const end = new Date(d.completed);
+                            return sum + Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                        }
+                        return sum;
+                    }, 0) / completedTasks.length
+                    : 0;
+
+                document.getElementById('kpi-total').textContent = total;
+                document.getElementById('kpi-completed').textContent = completed;
+                document.getElementById('kpi-completed-rate').textContent = `${(completed / total * 100 || 0).toFixed(1)}% completion rate`;
+                document.getElementById('kpi-progress').textContent = inProgress;
+                document.getElementById('kpi-progress-rate').textContent = `${(inProgress / total * 100 || 0).toFixed(1)}% of total`;
+                document.getElementById('kpi-avg-time').textContent = avgDays > 0 ? `${avgDays.toFixed(1)}d` : 'N/A';
+                document.getElementById('kpi-ontime').textContent = `${onTimeRate.toFixed(1)}%`;
+                document.getElementById('kpi-ontime-count').textContent = `${onTime} of ${completedTasks.length} tasks`;
+                document.getElementById('kpi-overdue').textContent = overdue;
+                document.getElementById('kpi-overdue-rate').textContent = `${(overdue / total * 100 || 0).toFixed(1)}% of total`;
+            }
+
+            renderInsights() {
+                const data = this.filteredData;
+                const insights = [];
+
+                const completed = data.filter(d => d.status === 'Complete').length;
+                const completionRate = (completed / data.length * 100);
+                insights.push(`Overall completion rate is ${completionRate.toFixed(1)}% with ${completed} of ${data.length} tasks completed`);
+
+                const delayed = data.filter(d => d.status === 'Complete' && d.days_behind < 0);
+                if (delayed.length > 0) {
+                    const avgDelay = delayed.reduce((sum, d) => sum + Math.abs(d.days_behind), 0) / delayed.length;
+                    insights.push(`${delayed.length} tasks completed late with average delay of ${avgDelay.toFixed(1)} days`);
+                }
+
+                const assigneeCounts = {};
+                data.forEach(d => {
+                    if (d.assignee) assigneeCounts[d.assignee] = (assigneeCounts[d.assignee] || 0) + 1;
+                });
+                const topAssignee = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1])[0];
+                if (topAssignee) {
+                    insights.push(`${topAssignee[0]} has the most tasks (${topAssignee[1]}) in the selected period`);
+                }
+
+                const urgentOpen = data.filter(d => d.priority === 'Urgent' && d.status !== 'Complete').length;
+                if (urgentOpen > 0) {
+                    insights.push(`⚠️ ${urgentOpen} urgent tasks are still open and need attention`);
+                }
+
+                const list = document.getElementById('insights-list');
+                list.innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+            }
+
+            renderCharts() {
+                this.renderStatusChart();
+                this.renderPriorityChart();
+                this.renderAssigneeChart();
+                this.renderTimelineChart();
+                this.renderProductChart();
+                this.renderTeamChart();
+            }
+
+            renderStatusChart() {
+                const statusCounts = {};
+                this.filteredData.forEach(d => {
+                    statusCounts[d.status] = (statusCounts[d.status] || 0) + 1;
+                });
+
+                const labels = Object.keys(statusCounts);
+                const data = Object.values(statusCounts);
+
+                if (this.charts.status) this.charts.status.destroy();
+
+                const ctx = document.getElementById('status-chart').getContext('2d');
+                this.charts.status = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: COLORS.map(c => c + 'CC'),
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { usePointStyle: true, padding: 15, font: { size: 12 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = ((context.parsed / total) * 100).toFixed(1);
+                                        return `${context.label}: ${context.parsed} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderPriorityChart() {
+                const priorityCounts = {};
+                this.filteredData.forEach(d => {
+                    if (d.priority) priorityCounts[d.priority] = (priorityCounts[d.priority] || 0) + 1;
+                });
+
+                const labels = Object.keys(priorityCounts);
+                const data = Object.values(priorityCounts);
+
+                if (this.charts.priority) this.charts.priority.destroy();
+
+                const ctx = document.getElementById('priority-chart').getContext('2d');
+                this.charts.priority = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: COLORS.map(c => c + 'CC'),
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { usePointStyle: true, padding: 15, font: { size: 12 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = ((context.parsed / total) * 100).toFixed(1);
+                                        return `${context.label}: ${context.parsed} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderAssigneeChart() {
+                const assigneeCounts = {};
+                this.filteredData.forEach(d => {
+                    if (d.assignee) {
+                        if (!assigneeCounts[d.assignee]) {
+                            assigneeCounts[d.assignee] = { total: 0, completed: 0 };
+                        }
+                        assigneeCounts[d.assignee].total++;
+                        if (d.status === 'Complete') assigneeCounts[d.assignee].completed++;
+                    }
+                });
+
+                const labels = Object.keys(assigneeCounts).sort((a, b) =>
+                    assigneeCounts[b].total - assigneeCounts[a].total
+                );
+                const totalData = labels.map(l => assigneeCounts[l].total);
+                const completedData = labels.map(l => assigneeCounts[l].completed);
+
+                if (this.charts.assignee) this.charts.assignee.destroy();
+
+                const ctx = document.getElementById('assignee-chart').getContext('2d');
+                this.charts.assignee = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Completed',
+                                data: completedData,
+                                backgroundColor: COLORS[1] + 'DD',
+                                borderColor: COLORS[1],
+                                borderWidth: 1,
+                                borderRadius: 6,
+                            },
+                            {
+                                label: 'In Progress / Pending',
+                                data: labels.map((l, i) => totalData[i] - completedData[i]),
+                                backgroundColor: COLORS[2] + 'DD',
+                                borderColor: COLORS[2],
+                                borderWidth: 1,
+                                borderRadius: 6,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { usePointStyle: true, padding: 15 }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true },
+                            y: { stacked: true, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            renderTimelineChart() {
+                const completed = this.filteredData.filter(d => d.status === 'Complete' && d.days_behind !== undefined);
+                const onTime = completed.filter(d => d.days_behind === 0).length;
+                const late = completed.filter(d => d.days_behind < 0).length;
+
+                if (this.charts.timeline) this.charts.timeline.destroy();
+
+                const ctx = document.getElementById('timeline-chart').getContext('2d');
+                this.charts.timeline = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['On Time', 'Delayed'],
+                        datasets: [{
+                            label: 'Tasks',
+                            data: [onTime, late],
+                            backgroundColor: [COLORS[1] + 'DD', COLORS[3] + 'DD'],
+                            borderColor: [COLORS[1], COLORS[3]],
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            renderProductChart() {
+                const productCounts = {};
+                this.filteredData.forEach(d => {
+                    if (d.product && d.product.length > 0) {
+                        d.product.forEach(p => {
+                            productCounts[p] = (productCounts[p] || 0) + 1;
+                        });
+                    } else {
+                        productCounts['No Product'] = (productCounts['No Product'] || 0) + 1;
+                    }
+                });
+
+                const labels = Object.keys(productCounts);
+                const data = Object.values(productCounts);
+
+                if (this.charts.product) this.charts.product.destroy();
+
+                const ctx = document.getElementById('product-chart').getContext('2d');
+                this.charts.product = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: COLORS.map(c => c + 'CC'),
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { usePointStyle: true, padding: 15, font: { size: 11 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = ((context.parsed / total) * 100).toFixed(1);
+                                        return `${context.label}: ${context.parsed} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderTeamChart() {
+                const teamCounts = {};
+                this.filteredData.forEach(d => {
+                    if (d.team) teamCounts[d.team] = (teamCounts[d.team] || 0) + 1;
+                });
+
+                const labels = Object.keys(teamCounts).sort((a, b) => teamCounts[b] - teamCounts[a]);
+                const data = labels.map(l => teamCounts[l]);
+
+                if (this.charts.team) this.charts.team.destroy();
+
+                const ctx = document.getElementById('team-chart').getContext('2d');
+                this.charts.team = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Tasks',
+                            data: data,
+                            backgroundColor: COLORS.map(c => c + 'DD'),
+                            borderColor: COLORS,
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            renderTable() {
+                const container = document.getElementById('task-table');
+
+                let html = '<table class="data-table"><thead><tr>';
+                html += '<th>Title</th><th>Assignee</th><th>Status</th><th>Priority</th><th>Team</th><th>Due Date</th><th>Completed</th>';
+                html += '</tr></thead><tbody>';
+
+                this.filteredData.forEach(task => {
+                    const statusClass = {
+                        'Complete': 'status-complete',
+                        'In Progress': 'status-progress',
+                        'Doing Now': 'status-progress',
+                        'Review': 'status-review',
+                        'Not Started': 'status-paused',
+                        'Paused': 'status-paused',
+                        'Archived': 'status-paused'
+                    }[task.status] || 'status-paused';
+
+                    const priorityClass = {
+                        'Urgent': 'priority-urgent',
+                        'High': 'priority-high',
+                        'Medium': 'priority-medium',
+                        'Low': 'priority-low'
+                    }[task.priority] || '';
+
+                    html += '<tr>';
+                    html += `<td><strong>${task.title}</strong></td>`;
+                    html += `<td>${task.assignee || '-'}</td>`;
+                    html += `<td><span class="status-badge ${statusClass}">${task.status}</span></td>`;
+                    html += `<td>${task.priority ? `<span class="priority-badge ${priorityClass}">${task.priority}</span>` : '-'}</td>`;
+                    html += `<td>${task.team || '-'}</td>`;
+                    html += `<td>${task.due || '-'}</td>`;
+                    html += `<td>${task.completed || '-'}</td>`;
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+        }
+
+        const dashboard = new Dashboard(TASK_DATA);
+    </script>
+</body>
+</html>

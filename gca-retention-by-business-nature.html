@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCA Retention by Nature of Business</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--blue:#2563eb;--green:#059669;--orange:#ea580c;--purple:#7c3aed;--pink:#db2777;--gray:#64748b;--bg:#f8fafc;--card:#fff;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#1e293b;padding:24px;}
+.header{text-align:center;margin-bottom:28px;}
+.header h1{font-size:1.7rem;font-weight:700;margin-bottom:4px;}
+.header p{color:var(--gray);font-size:.92rem;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;}
+.section h2{font-size:1.1rem;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.chart-container{position:relative;height:360px;}
+.chart-sm{height:300px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:28px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+.kpi .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin-bottom:5px;}
+.kpi .value{font-size:1.6rem;font-weight:700;}
+.kpi .sub{font-size:.78rem;color:var(--gray);margin-top:3px;}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);}
+th{background:#f1f5f9;font-weight:600;position:sticky;top:0;}
+td:first-child,th:first-child{text-align:left;}
+.table-wrap{max-height:420px;overflow-y:auto;}
+.tab-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.tab-btn{padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;font-size:.82rem;font-weight:500;transition:all .15s;}
+.tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.tab-btn:hover:not(.active){background:#f1f5f9;}
+.insight-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px;margin-bottom:16px;}
+.insight-box h3{font-size:.95rem;font-weight:600;color:#1e40af;margin-bottom:8px;}
+.insight-box p{font-size:.87rem;line-height:1.55;color:#1e3a5f;}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.insight-grid{grid-template-columns:1fr;}}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.72rem;font-weight:600;}
+.badge-up{background:#dcfce7;color:#166534;}.badge-down{background:#fee2e2;color:#991b1b;}
+.legend-note{font-size:.78rem;color:var(--gray);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>GCA Retention by Nature of Business</h1>
+  <p>Purpose code categories &amp; entity structure &middot; Jul 2024 – Jan 2026</p>
+</div>
+
+<!-- INSIGHTS SECTION -->
+<div class="section">
+  <h2>Key Insights</h2>
+  <div class="insight-grid" id="insights"></div>
+</div>
+
+<div class="kpi-row" id="kpis"></div>
+
+<!-- PURPOSE CODE CHARTS -->
+<div class="section">
+  <h2>6-Month Retention by Industry (Purpose Code)</h2>
+  <div class="chart-container"><canvas id="chartPurpose6m"></canvas></div>
+</div>
+
+<div class="grid-2">
+  <div class="section">
+    <h2>6m Retention by Industry (Jan 2026)</h2>
+    <div class="chart-container chart-sm"><canvas id="chartBar6m"></canvas></div>
+  </div>
+  <div class="section">
+    <h2>12m Retention by Industry (Jan 2026)</h2>
+    <div class="chart-container chart-sm"><canvas id="chartBar12m"></canvas></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>12-Month Retention by Industry</h2>
+  <div class="chart-container"><canvas id="chartPurpose12m"></canvas></div>
+</div>
+
+<!-- ENTITY STRUCTURE CHARTS -->
+<div class="section">
+  <h2>6-Month Retention by Entity Structure</h2>
+  <div class="chart-container"><canvas id="chartEntity"></canvas></div>
+  <div class="legend-note">Pvt Ltd (company) &middot; Sole Prop &middot; LLP &middot; Partnership</div>
+</div>
+
+<!-- COHORT SIZE -->
+<div class="section">
+  <h2>6m Cohort Size by Industry</h2>
+  <div class="chart-container"><canvas id="chartCohortSize"></canvas></div>
+</div>
+
+<!-- DATA TABLE -->
+<div class="section">
+  <h2>Detailed Data</h2>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('purpose')">By Industry</button>
+    <button class="tab-btn" onclick="showTab('entity')">By Entity Type</button>
+  </div>
+  <div class="table-wrap"><table id="dataTable"></table></div>
+</div>
+
+<script>
+// PURPOSE CODE DATA
+const pcRaw = [
+{"m":"2024-07","c":"Business Consulting","a":8,"c6":17,"r6":7,"p6":41.2,"c12":17,"r12":7,"p12":41.2},
+{"m":"2024-07","c":"Marketing & Media","a":5,"c6":12,"r6":4,"p6":33.3,"c12":20,"r12":4,"p12":20},
+{"m":"2024-07","c":"Software & IT Services","a":21,"c6":40,"r6":20,"p6":50,"c12":46,"r12":20,"p12":43.5},
+{"m":"2024-07","c":"Trade & Export","a":2,"c6":5,"r6":2,"p6":40,"c12":9,"r12":2,"p12":22.2},
+{"m":"2024-08","c":"Business Consulting","a":11,"c6":18,"r6":9,"p6":50,"c12":18,"r12":9,"p12":50},
+{"m":"2024-08","c":"Marketing & Media","a":6,"c6":12,"r6":4,"p6":33.3,"c12":21,"r12":4,"p12":19},
+{"m":"2024-08","c":"Software & IT Services","a":14,"c6":41,"r6":13,"p6":31.7,"c12":45,"r12":13,"p12":28.9},
+{"m":"2024-08","c":"Trade & Export","a":1,"c6":5,"r6":1,"p6":20,"c12":9,"r12":1,"p12":11.1},
+{"m":"2024-09","c":"Business Consulting","a":14,"c6":19,"r6":14,"p6":73.7,"c12":20,"r12":14,"p12":70},
+{"m":"2024-09","c":"Marketing & Media","a":5,"c6":14,"r6":5,"p6":35.7,"c12":23,"r12":5,"p12":21.7},
+{"m":"2024-09","c":"Software & IT Services","a":21,"c6":41,"r6":17,"p6":41.5,"c12":46,"r12":17,"p12":37},
+{"m":"2024-09","c":"Trade & Export","a":4,"c6":5,"r6":2,"p6":40,"c12":9,"r12":2,"p12":22.2},
+{"m":"2024-10","c":"Business Consulting","a":11,"c6":18,"r6":11,"p6":61.1,"c12":20,"r12":11,"p12":55},
+{"m":"2024-10","c":"Marketing & Media","a":5,"c6":13,"r6":5,"p6":38.5,"c12":23,"r12":5,"p12":21.7},
+{"m":"2024-10","c":"Software & IT Services","a":21,"c6":42,"r6":18,"p6":42.9,"c12":49,"r12":18,"p12":36.7},
+{"m":"2024-10","c":"Trade & Export","a":4,"c6":7,"r6":3,"p6":42.9,"c12":10,"r12":3,"p12":30},
+{"m":"2024-11","c":"Business Consulting","a":13,"c6":16,"r6":13,"p6":81.3,"c12":20,"r12":13,"p12":65},
+{"m":"2024-11","c":"Marketing & Media","a":6,"c6":12,"r6":5,"p6":41.7,"c12":23,"r12":5,"p12":21.7},
+{"m":"2024-11","c":"Software & IT Services","a":19,"c6":41,"r6":17,"p6":41.5,"c12":52,"r12":17,"p12":32.7},
+{"m":"2024-11","c":"Trade & Export","a":2,"c6":7,"r6":1,"p6":14.3,"c12":10,"r12":1,"p12":10},
+{"m":"2024-12","c":"Business Consulting","a":13,"c6":16,"r6":9,"p6":56.3,"c12":20,"r12":9,"p12":45},
+{"m":"2024-12","c":"Marketing & Media","a":7,"c6":12,"r6":7,"p6":58.3,"c12":20,"r12":7,"p12":35},
+{"m":"2024-12","c":"Software & IT Services","a":23,"c6":39,"r6":21,"p6":53.8,"c12":52,"r12":21,"p12":40.4},
+{"m":"2024-12","c":"Trade & Export","a":1,"c6":6,"r6":1,"p6":16.7,"c12":11,"r12":1,"p12":9.1},
+{"m":"2025-01","c":"Business Consulting","a":15,"c6":20,"r6":13,"p6":65,"c12":24,"r12":13,"p12":54.2},
+{"m":"2025-01","c":"Marketing & Media","a":8,"c6":9,"r6":5,"p6":55.6,"c12":16,"r12":7,"p12":43.8},
+{"m":"2025-01","c":"Software & IT Services","a":21,"c6":36,"r6":20,"p6":55.6,"c12":53,"r12":20,"p12":37.7},
+{"m":"2025-01","c":"Trade & Export","a":2,"c6":6,"r6":2,"p6":33.3,"c12":9,"r12":2,"p12":22.2},
+{"m":"2025-02","c":"Business Consulting","a":15,"c6":22,"r6":13,"p6":59.1,"c12":26,"r12":14,"p12":53.8},
+{"m":"2025-02","c":"Marketing & Media","a":6,"c6":12,"r6":5,"p6":41.7,"c12":16,"r12":5,"p12":31.3},
+{"m":"2025-02","c":"Software & IT Services","a":19,"c6":34,"r6":18,"p6":52.9,"c12":54,"r12":19,"p12":35.2},
+{"m":"2025-02","c":"Trade & Export","a":2,"c6":6,"r6":1,"p6":16.7,"c12":9,"r12":1,"p12":11.1},
+{"m":"2025-03","c":"Business Consulting","a":14,"c6":23,"r6":13,"p6":56.5,"c12":27,"r12":13,"p12":48.1},
+{"m":"2025-03","c":"Marketing & Media","a":9,"c6":11,"r6":8,"p6":72.7,"c12":17,"r12":9,"p12":52.9},
+{"m":"2025-03","c":"Software & IT Services","a":22,"c6":33,"r6":18,"p6":54.5,"c12":53,"r12":18,"p12":34},
+{"m":"2025-03","c":"Trade & Export","a":3,"c6":7,"r6":3,"p6":42.9,"c12":10,"r12":3,"p12":30},
+{"m":"2025-04","c":"Business Consulting","a":12,"c6":24,"r6":11,"p6":45.8,"c12":27,"r12":11,"p12":40.7},
+{"m":"2025-04","c":"Marketing & Media","a":5,"c6":12,"r6":5,"p6":41.7,"c12":16,"r12":5,"p12":31.3},
+{"m":"2025-04","c":"Software & IT Services","a":21,"c6":34,"r6":20,"p6":58.8,"c12":54,"r12":21,"p12":38.9},
+{"m":"2025-04","c":"Trade & Export","a":2,"c6":6,"r6":2,"p6":33.3,"c12":10,"r12":2,"p12":20},
+{"m":"2025-05","c":"Business Consulting","a":16,"c6":25,"r6":16,"p6":64,"c12":26,"r12":16,"p12":61.5},
+{"m":"2025-05","c":"Marketing & Media","a":6,"c6":12,"r6":5,"p6":41.7,"c12":16,"r12":6,"p12":37.5},
+{"m":"2025-05","c":"Software & IT Services","a":24,"c6":32,"r6":21,"p6":65.6,"c12":51,"r12":22,"p12":43.1},
+{"m":"2025-05","c":"Trade & Export","a":0,"c6":3,"r6":0,"p6":0,"c12":9,"r12":0,"p12":0},
+{"m":"2025-06","c":"Business Consulting","a":14,"c6":25,"r6":14,"p6":56,"c12":26,"r12":14,"p12":53.8},
+{"m":"2025-06","c":"Marketing & Media","a":7,"c6":13,"r6":7,"p6":53.8,"c12":15,"r12":7,"p12":46.7},
+{"m":"2025-06","c":"Software & IT Services","a":25,"c6":35,"r6":24,"p6":68.6,"c12":49,"r12":24,"p12":49},
+{"m":"2025-06","c":"Trade & Export","a":1,"c6":3,"r6":1,"p6":33.3,"c12":7,"r12":1,"p12":14.3},
+{"m":"2025-07","c":"Business Consulting","a":13,"c6":24,"r6":12,"p6":50,"c12":26,"r12":12,"p12":46.2},
+{"m":"2025-07","c":"Marketing & Media","a":7,"c6":12,"r6":7,"p6":58.3,"c12":14,"r12":7,"p12":50},
+{"m":"2025-07","c":"Software & IT Services","a":21,"c6":34,"r6":20,"p6":58.8,"c12":45,"r12":20,"p12":44.4},
+{"m":"2025-07","c":"Trade & Export","a":3,"c6":3,"r6":2,"p6":66.7,"c12":7,"r12":3,"p12":42.9},
+{"m":"2025-08","c":"Business Consulting","a":16,"c6":23,"r6":15,"p6":65.2,"c12":27,"r12":15,"p12":55.6},
+{"m":"2025-08","c":"Marketing & Media","a":3,"c6":11,"r6":3,"p6":27.3,"c12":14,"r12":3,"p12":21.4},
+{"m":"2025-08","c":"Software & IT Services","a":24,"c6":33,"r6":20,"p6":60.6,"c12":44,"r12":20,"p12":45.5},
+{"m":"2025-08","c":"Trade & Export","a":3,"c6":4,"r6":3,"p6":75,"c12":7,"r12":3,"p12":42.9},
+{"m":"2025-09","c":"Business Consulting","a":13,"c6":23,"r6":13,"p6":56.5,"c12":27,"r12":13,"p12":48.1},
+{"m":"2025-09","c":"Marketing & Media","a":5,"c6":11,"r6":4,"p6":36.4,"c12":13,"r12":4,"p12":30.8},
+{"m":"2025-09","c":"Software & IT Services","a":24,"c6":35,"r6":23,"p6":65.7,"c12":46,"r12":24,"p12":52.2},
+{"m":"2025-09","c":"Trade & Export","a":2,"c6":4,"r6":2,"p6":50,"c12":7,"r12":2,"p12":28.6},
+{"m":"2025-10","c":"Business Consulting","a":16,"c6":21,"r6":14,"p6":66.7,"c12":27,"r12":15,"p12":55.6},
+{"m":"2025-10","c":"Marketing & Media","a":7,"c6":11,"r6":7,"p6":63.6,"c12":14,"r12":7,"p12":50},
+{"m":"2025-10","c":"Software & IT Services","a":25,"c6":36,"r6":22,"p6":61.1,"c12":43,"r12":22,"p12":51.2},
+{"m":"2025-10","c":"Trade & Export","a":4,"c6":4,"r6":4,"p6":100,"c12":6,"r12":4,"p12":66.7},
+{"m":"2025-11","c":"Business Consulting","a":16,"c6":23,"r6":15,"p6":65.2,"c12":28,"r12":15,"p12":53.6},
+{"m":"2025-11","c":"Marketing & Media","a":4,"c6":11,"r6":4,"p6":36.4,"c12":14,"r12":4,"p12":28.6},
+{"m":"2025-11","c":"Software & IT Services","a":23,"c6":36,"r6":22,"p6":61.1,"c12":44,"r12":22,"p12":50},
+{"m":"2025-11","c":"Trade & Export","a":4,"c6":4,"r6":3,"p6":75,"c12":4,"r12":3,"p12":75},
+{"m":"2025-12","c":"Business Consulting","a":16,"c6":23,"r6":16,"p6":69.6,"c12":29,"r12":16,"p12":55.2},
+{"m":"2025-12","c":"Marketing & Media","a":4,"c6":11,"r6":4,"p6":36.4,"c12":14,"r12":4,"p12":28.6},
+{"m":"2025-12","c":"Software & IT Services","a":23,"c6":35,"r6":22,"p6":62.9,"c12":45,"r12":22,"p12":48.9},
+{"m":"2025-12","c":"Trade & Export","a":2,"c6":5,"r6":2,"p6":40,"c12":5,"r12":2,"p12":40},
+{"m":"2026-01","c":"Business Consulting","a":16,"c6":23,"r6":16,"p6":69.6,"c12":28,"r12":16,"p12":57.1},
+{"m":"2026-01","c":"Marketing & Media","a":6,"c6":10,"r6":4,"p6":40,"c12":13,"r12":5,"p12":38.5},
+{"m":"2026-01","c":"Software & IT Services","a":24,"c6":35,"r6":23,"p6":65.7,"c12":45,"r12":23,"p12":51.1},
+{"m":"2026-01","c":"Trade & Export","a":1,"c6":5,"r6":1,"p6":20,"c12":5,"r12":1,"p12":20}
+];
+
+// ENTITY DATA
+const entRaw = [
+{"m":"2024-07","t":"company","a":18,"c6":34,"r6":14,"p6":41.2},{"m":"2024-07","t":"limited_liability_partnership","a":6,"c6":8,"r6":6,"p6":75},{"m":"2024-07","t":"partnership","a":4,"c6":5,"r6":4,"p6":80},{"m":"2024-07","t":"sole_proprietor","a":12,"c6":31,"r6":12,"p6":38.7},
+{"m":"2024-08","t":"company","a":12,"c6":37,"r6":11,"p6":29.7},{"m":"2024-08","t":"limited_liability_partnership","a":6,"c6":8,"r6":5,"p6":62.5},{"m":"2024-08","t":"partnership","a":2,"c6":5,"r6":2,"p6":40},{"m":"2024-08","t":"sole_proprietor","a":13,"c6":31,"r6":10,"p6":32.3},
+{"m":"2024-09","t":"company","a":16,"c6":37,"r6":15,"p6":40.5},{"m":"2024-09","t":"limited_liability_partnership","a":7,"c6":8,"r6":7,"p6":87.5},{"m":"2024-09","t":"partnership","a":3,"c6":5,"r6":3,"p6":60},{"m":"2024-09","t":"sole_proprietor","a":18,"c6":34,"r6":15,"p6":44.1},
+{"m":"2024-10","t":"company","a":17,"c6":36,"r6":16,"p6":44.4},{"m":"2024-10","t":"limited_liability_partnership","a":6,"c6":8,"r6":6,"p6":75},{"m":"2024-10","t":"partnership","a":3,"c6":5,"r6":3,"p6":60},{"m":"2024-10","t":"sole_proprietor","a":16,"c6":33,"r6":12,"p6":36.4},
+{"m":"2024-11","t":"company","a":16,"c6":32,"r6":15,"p6":46.9},{"m":"2024-11","t":"limited_liability_partnership","a":7,"c6":8,"r6":5,"p6":62.5},{"m":"2024-11","t":"partnership","a":2,"c6":5,"r6":2,"p6":40},{"m":"2024-11","t":"sole_proprietor","a":16,"c6":34,"r6":15,"p6":44.1},
+{"m":"2024-12","t":"company","a":17,"c6":29,"r6":17,"p6":58.6},{"m":"2024-12","t":"limited_liability_partnership","a":7,"c6":10,"r6":4,"p6":40},{"m":"2024-12","t":"partnership","a":3,"c6":5,"r6":3,"p6":60},{"m":"2024-12","t":"sole_proprietor","a":20,"c6":32,"r6":17,"p6":53.1},
+{"m":"2025-01","t":"company","a":16,"c6":26,"r6":13,"p6":50},{"m":"2025-01","t":"limited_liability_partnership","a":7,"c6":13,"r6":7,"p6":53.8},{"m":"2025-01","t":"partnership","a":4,"c6":4,"r6":3,"p6":75},{"m":"2025-01","t":"sole_proprietor","a":20,"c6":31,"r6":18,"p6":58.1},
+{"m":"2025-02","t":"company","a":16,"c6":26,"r6":15,"p6":57.7},{"m":"2025-02","t":"limited_liability_partnership","a":7,"c6":13,"r6":7,"p6":53.8},{"m":"2025-02","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-02","t":"sole_proprietor","a":17,"c6":32,"r6":13,"p6":40.6},
+{"m":"2025-03","t":"company","a":19,"c6":25,"r6":15,"p6":60},{"m":"2025-03","t":"limited_liability_partnership","a":8,"c6":12,"r6":8,"p6":66.7},{"m":"2025-03","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-03","t":"sole_proprietor","a":19,"c6":34,"r6":17,"p6":50},
+{"m":"2025-04","t":"company","a":15,"c6":28,"r6":13,"p6":46.4},{"m":"2025-04","t":"limited_liability_partnership","a":7,"c6":12,"r6":7,"p6":58.3},{"m":"2025-04","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-04","t":"sole_proprietor","a":17,"c6":33,"r6":17,"p6":51.5},
+{"m":"2025-05","t":"company","a":23,"c6":27,"r6":19,"p6":70.4},{"m":"2025-05","t":"limited_liability_partnership","a":8,"c6":11,"r6":6,"p6":54.5},{"m":"2025-05","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-05","t":"sole_proprietor","a":15,"c6":32,"r6":15,"p6":46.9},
+{"m":"2025-06","t":"company","a":22,"c6":31,"r6":20,"p6":64.5},{"m":"2025-06","t":"limited_liability_partnership","a":6,"c6":13,"r6":6,"p6":46.2},{"m":"2025-06","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-06","t":"sole_proprietor","a":20,"c6":32,"r6":18,"p6":56.3},
+{"m":"2025-07","t":"company","a":22,"c6":32,"r6":20,"p6":62.5},{"m":"2025-07","t":"limited_liability_partnership","a":8,"c6":12,"r6":7,"p6":58.3},{"m":"2025-07","t":"partnership","a":3,"c6":4,"r6":3,"p6":75},{"m":"2025-07","t":"sole_proprietor","a":17,"c6":32,"r6":15,"p6":46.9},
+{"m":"2025-08","t":"company","a":25,"c6":34,"r6":21,"p6":61.8},{"m":"2025-08","t":"limited_liability_partnership","a":4,"c6":12,"r6":4,"p6":33.3},{"m":"2025-08","t":"partnership","a":2,"c6":3,"r6":2,"p6":66.7},{"m":"2025-08","t":"sole_proprietor","a":21,"c6":31,"r6":18,"p6":58.1},
+{"m":"2025-09","t":"company","a":22,"c6":37,"r6":21,"p6":56.8},{"m":"2025-09","t":"limited_liability_partnership","a":4,"c6":11,"r6":4,"p6":36.4},{"m":"2025-09","t":"partnership","a":3,"c6":3,"r6":3,"p6":100},{"m":"2025-09","t":"sole_proprietor","a":18,"c6":33,"r6":16,"p6":48.5},
+{"m":"2025-10","t":"company","a":23,"c6":37,"r6":21,"p6":56.8},{"m":"2025-10","t":"limited_liability_partnership","a":4,"c6":11,"r6":4,"p6":36.4},{"m":"2025-10","t":"partnership","a":3,"c6":3,"r6":3,"p6":100},{"m":"2025-10","t":"sole_proprietor","a":24,"c6":33,"r6":20,"p6":60.6},
+{"m":"2025-11","t":"company","a":22,"c6":36,"r6":21,"p6":58.3},{"m":"2025-11","t":"limited_liability_partnership","a":3,"c6":11,"r6":3,"p6":27.3},{"m":"2025-11","t":"partnership","a":2,"c6":3,"r6":2,"p6":66.7},{"m":"2025-11","t":"sole_proprietor","a":20,"c6":37,"r6":19,"p6":51.4},
+{"m":"2025-12","t":"company","a":23,"c6":36,"r6":22,"p6":61.1},{"m":"2025-12","t":"limited_liability_partnership","a":3,"c6":9,"r6":3,"p6":33.3},{"m":"2025-12","t":"partnership","a":3,"c6":3,"r6":3,"p6":100},{"m":"2025-12","t":"sole_proprietor","a":19,"c6":37,"r6":19,"p6":51.4},
+{"m":"2026-01","t":"company","a":19,"c6":35,"r6":17,"p6":48.6},{"m":"2026-01","t":"limited_liability_partnership","a":4,"c6":9,"r6":4,"p6":44.4},{"m":"2026-01","t":"partnership","a":3,"c6":3,"r6":3,"p6":100},{"m":"2026-01","t":"sole_proprietor","a":24,"c6":36,"r6":23,"p6":63.9}
+];
+
+const cats = ['Software & IT Services','Business Consulting','Marketing & Media','Trade & Export'];
+const colors = {
+  'Software & IT Services':['#2563eb','#2563eb44'],
+  'Business Consulting':['#059669','#05966944'],
+  'Marketing & Media':['#ea580c','#ea580c44'],
+  'Trade & Export':['#7c3aed','#7c3aed44']
+};
+const entColors = {'company':'#2563eb','limited_liability_partnership':'#059669','partnership':'#ea580c','sole_proprietor':'#7c3aed'};
+const entLabels = {'company':'Pvt Ltd / Company','limited_liability_partnership':'LLP','partnership':'Partnership','sole_proprietor':'Sole Proprietor'};
+
+// Helper: get data for a category
+const forCat = (cat) => pcRaw.filter(r=>r.c===cat);
+const labels = [...new Set(pcRaw.map(r=>r.m))];
+
+// KPIs - latest month
+const latest = pcRaw.filter(r=>r.m==='2026-01');
+document.getElementById('kpis').innerHTML = cats.map(cat => {
+  const d = latest.find(r=>r.c===cat);
+  if(!d) return '';
+  return `<div class="kpi"><div class="label">${cat}</div><div class="value" style="color:${colors[cat][0]}">${d.p6}%</div><div class="sub">6m ret | 12m: ${d.p12}%</div></div>`;
+}).join('') + `<div class="kpi"><div class="label">Best 6m Segment</div><div class="value" style="color:#059669">Consulting</div><div class="sub">69.6% Jan '26</div></div>`;
+
+// INSIGHTS
+document.getElementById('insights').innerHTML = `
+<div class="insight-box">
+  <h3>Business Consulting: Highest & Most Stable Retention</h3>
+  <p>At <strong>69.6% 6-month retention</strong> (Jan '26), consulting businesses are by far the stickiest segment — nearly 2x the rate of Marketing & Media. Their 12m retention (57.1%) is also the highest, with remarkably low volatility. These clients have recurring cross-border payment needs that create natural habit loops.</p>
+</div>
+<div class="insight-box">
+  <h3>Marketing & Media: The Retention Problem</h3>
+  <p>At <strong>40% 6-month retention</strong>, marketing/media businesses churn at nearly double the rate of consulting and software. Their needs are more project-based and seasonal — they transact in bursts, then go dormant. This segment has the widest 6m-to-12m gap, suggesting many clients are one-time or sporadic users.</p>
+</div>
+<div class="insight-box">
+  <h3>Software & IT: Volume Leader, Improving Steadily</h3>
+  <p>The largest segment (35 in 6m cohort) now retains at <strong>65.7% (6m)</strong> and crossed 51% on 12-month retention. IT services have predictable monthly SaaS/consulting revenue flows from overseas clients, which naturally drives repeat usage. This is your growth engine.</p>
+</div>
+<div class="insight-box">
+  <h3>Entity Structure Surprise: Sole Props Outpacing Pvt Ltd</h3>
+  <p>In Jan '26, sole proprietors hit <strong>63.9% 6m retention</strong> — beating Pvt Ltd companies (48.6%) for the first time in 6 months. Partnerships maintain near-100% retention but with tiny cohorts (3 clients). LLPs have dropped from 75% to 44%, suggesting a few key LLP clients may have left.</p>
+</div>
+`;
+
+// Chart defaults
+const baseOpts = (yLabel) => ({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:14,font:{size:10}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+'%'}}},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}},y:{title:{display:!!yLabel,text:yLabel},ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}}});
+
+// 6m by purpose code
+new Chart(document.getElementById('chartPurpose6m'),{type:'line',data:{labels,datasets:cats.map(cat=>({
+  label:cat,data:forCat(cat).map(r=>r.p6),borderColor:colors[cat][0],backgroundColor:colors[cat][1],
+  borderWidth:2.5,pointRadius:3,tension:.3,fill:false
+}))},options:baseOpts('6m Retention %')});
+
+// 12m by purpose code
+new Chart(document.getElementById('chartPurpose12m'),{type:'line',data:{labels,datasets:cats.map(cat=>({
+  label:cat,data:forCat(cat).map(r=>r.p12),borderColor:colors[cat][0],backgroundColor:colors[cat][1],
+  borderWidth:2.5,borderDash:[6,3],pointRadius:3,tension:.3,fill:false
+}))},options:baseOpts('12m Retention %')});
+
+// Bar charts for latest
+const latestCats = cats.map(c=>latest.find(r=>r.c===c)).filter(Boolean);
+new Chart(document.getElementById('chartBar6m'),{type:'bar',data:{labels:latestCats.map(r=>r.c.split(' ')[0]),datasets:[{label:'6m Retention',data:latestCats.map(r=>r.p6),backgroundColor:latestCats.map(r=>colors[r.c][0]+'cc'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'%'}}},scales:{x:{ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}},y:{grid:{display:false}}}}});
+
+new Chart(document.getElementById('chartBar12m'),{type:'bar',data:{labels:latestCats.map(r=>r.c.split(' ')[0]),datasets:[{label:'12m Retention',data:latestCats.map(r=>r.p12),backgroundColor:latestCats.map(r=>colors[r.c][0]+'cc'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'%'}}},scales:{x:{ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}},y:{grid:{display:false}}}}});
+
+// Entity chart
+const entTypes = ['company','sole_proprietor','limited_liability_partnership','partnership'];
+const entLabelsArr = labels;
+new Chart(document.getElementById('chartEntity'),{type:'line',data:{labels:entLabelsArr,datasets:entTypes.map(t=>({
+  label:entLabels[t],data:entRaw.filter(r=>r.t===t).map(r=>r.p6),borderColor:entColors[t],
+  borderWidth:2.5,pointRadius:3,tension:.3,fill:false,borderDash:t==='partnership'?[6,3]:[]
+}))},options:baseOpts('6m Retention %')});
+
+// Cohort sizes
+new Chart(document.getElementById('chartCohortSize'),{type:'bar',data:{labels,datasets:cats.map(cat=>({
+  label:cat,data:forCat(cat).map(r=>r.c6),backgroundColor:colors[cat][0]+'88',borderRadius:3
+}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:12,font:{size:10}}}},scales:{x:{grid:{display:false},stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,grid:{color:'#f1f5f9'}}}}});
+
+// Table
+function showTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const tbl = document.getElementById('dataTable');
+  if(tab==='purpose'){
+    let h='<thead><tr><th>Month</th>';cats.forEach(c=>h+=`<th colspan="2">${c}</th>`);h+='</tr><tr><th></th>';cats.forEach(()=>h+='<th>6m</th><th>12m</th>');h+='</tr></thead><tbody>';
+    labels.forEach(m=>{h+='<tr><td>'+m+'</td>';cats.forEach(c=>{const d=pcRaw.find(r=>r.m===m&&r.c===c);h+=d?`<td>${d.p6}%</td><td>${d.p12}%</td>`:'<td>-</td><td>-</td>';});h+='</tr>';});
+    h+='</tbody>';tbl.innerHTML=h;
+  } else {
+    let h='<thead><tr><th>Month</th><th>Pvt Ltd</th><th>Sole Prop</th><th>LLP</th><th>Partnership</th></tr></thead><tbody>';
+    labels.forEach(m=>{h+='<tr><td>'+m+'</td>';entTypes.forEach(t=>{const d=entRaw.find(r=>r.m===m&&r.t===t);h+=d?`<td>${d.p6}%</td>`:'<td>-</td>';});h+='</tr>';});
+    h+='</tbody>';tbl.innerHTML=h;
+  }
+}
+showTab('purpose');
+</script>
+</body>
+</html>

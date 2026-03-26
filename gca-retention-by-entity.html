@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCA Retention — Business vs Individual</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --blue: #2563eb; --blue-light: #93bbfd; --green: #059669; --green-light: #6ee7b7; --orange: #ea580c; --orange-light: #fdba74; --purple: #7c3aed; --purple-light: #c4b5fd; --gray: #64748b; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1e293b; padding: 24px; }
+  .header { text-align:center; margin-bottom:32px; }
+  .header h1 { font-size:1.75rem; font-weight:700; margin-bottom:4px; }
+  .header p { color: var(--gray); font-size:0.95rem; }
+  .kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:center; }
+  .kpi .label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--gray); margin-bottom:6px; }
+  .kpi .value { font-size:1.75rem; font-weight:700; }
+  .kpi .sub { font-size:0.8rem; color:var(--gray); margin-top:4px; }
+  .section { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px; }
+  .section h2 { font-size:1.1rem; font-weight:600; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .chart-container { position:relative; height:340px; }
+  .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+  @media(max-width:900px){ .grid-2{grid-template-columns:1fr;} }
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+  th, td { padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); }
+  th { background:#f1f5f9; font-weight:600; position:sticky; top:0; }
+  td:first-child, th:first-child { text-align:left; }
+  .tab-bar { display:flex; gap:8px; margin-bottom:16px; }
+  .tab-btn { padding:8px 18px; border:1px solid var(--border); border-radius:8px; background:var(--card); cursor:pointer; font-size:0.85rem; font-weight:500; transition:all 0.15s; }
+  .tab-btn.active { background:var(--blue); color:white; border-color:var(--blue); }
+  .tab-btn:hover:not(.active) { background:#f1f5f9; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .badge-up { background:#dcfce7; color:#166534; }
+  .badge-down { background:#fee2e2; color:#991b1b; }
+  .table-wrap { max-height:400px; overflow-y:auto; }
+  .legend-note { font-size:0.8rem; color:var(--gray); margin-top:8px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GCA Rolling Retention — Business vs Individual</h1>
+  <p>6-month and 12-month rolling retention by entity type &middot; Jul 2024 – Jan 2026</p>
+</div>
+
+<div class="kpi-row" id="kpis"></div>
+
+<div class="grid-2">
+  <div class="section">
+    <h2>6-Month Rolling Retention</h2>
+    <div class="chart-container"><canvas id="chart6m"></canvas></div>
+    <div class="legend-note">Solid = Business &middot; Dashed = Individual</div>
+  </div>
+  <div class="section">
+    <h2>12-Month Rolling Retention</h2>
+    <div class="chart-container"><canvas id="chart12m"></canvas></div>
+    <div class="legend-note">Solid = Business &middot; Dashed = Individual</div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Retention Gap: Business vs Individual</h2>
+  <div class="chart-container"><canvas id="chartGap"></canvas></div>
+  <div class="legend-note">Positive = Business retains better &middot; Negative = Individual retains better</div>
+</div>
+
+<div class="section">
+  <h2>Cohort Sizes Over Time</h2>
+  <div class="grid-2">
+    <div class="chart-container"><canvas id="chartCohort6m"></canvas></div>
+    <div class="chart-container"><canvas id="chartCohort12m"></canvas></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Detailed Data</h2>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTable('biz')">Business</button>
+    <button class="tab-btn" onclick="showTable('ind')">Individual</button>
+  </div>
+  <div class="table-wrap">
+    <table id="dataTable"></table>
+  </div>
+</div>
+
+<script>
+const raw = [
+{"month":"2024-07","entity_type":"company","active":40,"c6":78,"r6":36,"p6":46.2,"c12":101,"r12":37,"p12":36.6},
+{"month":"2024-07","entity_type":"individual","active":33,"c6":57,"r6":29,"p6":50.9,"c12":98,"r12":29,"p12":29.6},
+{"month":"2024-08","entity_type":"company","active":33,"c6":81,"r6":28,"p6":34.6,"c12":102,"r12":28,"p12":27.5},
+{"month":"2024-08","entity_type":"individual","active":31,"c6":58,"r6":27,"p6":46.6,"c12":96,"r12":27,"p12":28.1},
+{"month":"2024-09","entity_type":"company","active":46,"c6":84,"r6":40,"p6":47.6,"c12":105,"r12":40,"p12":38.1},
+{"month":"2024-09","entity_type":"individual","active":36,"c6":60,"r6":30,"p6":50.0,"c12":93,"r12":30,"p12":32.3},
+{"month":"2024-10","entity_type":"company","active":44,"c6":84,"r6":39,"p6":46.4,"c12":109,"r12":39,"p12":35.8},
+{"month":"2024-10","entity_type":"individual","active":40,"c6":64,"r6":34,"p6":53.1,"c12":93,"r12":34,"p12":36.6},
+{"month":"2024-11","entity_type":"company","active":42,"c6":81,"r6":38,"p6":46.9,"c12":111,"r12":38,"p12":34.2},
+{"month":"2024-11","entity_type":"individual","active":37,"c6":64,"r6":33,"p6":51.6,"c12":94,"r12":33,"p12":35.1},
+{"month":"2024-12","entity_type":"company","active":47,"c6":78,"r6":41,"p6":52.6,"c12":109,"r12":41,"p12":37.6},
+{"month":"2024-12","entity_type":"individual","active":35,"c6":66,"r6":32,"p6":48.5,"c12":88,"r12":32,"p12":36.4},
+{"month":"2025-01","entity_type":"company","active":48,"c6":76,"r6":42,"p6":55.3,"c12":108,"r12":44,"p12":40.7},
+{"month":"2025-01","entity_type":"individual","active":34,"c6":66,"r6":32,"p6":48.5,"c12":84,"r12":32,"p12":38.1},
+{"month":"2025-02","entity_type":"company","active":44,"c6":77,"r6":39,"p6":50.6,"c12":111,"r12":41,"p12":36.9},
+{"month":"2025-02","entity_type":"individual","active":36,"c6":60,"r6":30,"p6":50.0,"c12":83,"r12":30,"p12":36.1},
+{"month":"2025-03","entity_type":"company","active":50,"c6":77,"r6":44,"p6":57.1,"c12":113,"r12":45,"p12":39.8},
+{"month":"2025-03","entity_type":"individual","active":40,"c6":64,"r6":36,"p6":56.3,"c12":87,"r12":36,"p12":41.4},
+{"month":"2025-04","entity_type":"company","active":43,"c6":79,"r6":41,"p6":51.9,"c12":112,"r12":42,"p12":37.5},
+{"month":"2025-04","entity_type":"individual","active":43,"c6":66,"r6":38,"p6":57.6,"c12":89,"r12":39,"p12":43.8},
+{"month":"2025-05","entity_type":"company","active":50,"c6":75,"r6":44,"p6":58.7,"c12":107,"r12":46,"p12":43.0},
+{"month":"2025-05","entity_type":"individual","active":40,"c6":66,"r6":36,"p6":54.5,"c12":87,"r12":37,"p12":42.5},
+{"month":"2025-06","entity_type":"company","active":52,"c6":81,"r6":48,"p6":59.3,"c12":104,"r12":48,"p12":46.2},
+{"month":"2025-06","entity_type":"individual","active":42,"c6":66,"r6":39,"p6":59.1,"c12":88,"r12":39,"p12":44.3},
+{"month":"2025-07","entity_type":"company","active":52,"c6":81,"r6":46,"p6":56.8,"c12":102,"r12":47,"p12":46.1},
+{"month":"2025-07","entity_type":"individual","active":41,"c6":66,"r6":38,"p6":57.6,"c12":88,"r12":39,"p12":44.3},
+{"month":"2025-08","entity_type":"company","active":53,"c6":82,"r6":46,"p6":56.1,"c12":103,"r12":46,"p12":44.7},
+{"month":"2025-08","entity_type":"individual","active":38,"c6":67,"r6":38,"p6":56.7,"c12":83,"r12":38,"p12":45.8},
+{"month":"2025-09","entity_type":"company","active":48,"c6":86,"r6":45,"p6":52.3,"c12":106,"r12":46,"p12":43.4},
+{"month":"2025-09","entity_type":"individual","active":39,"c6":64,"r6":34,"p6":53.1,"c12":82,"r12":35,"p12":42.7},
+{"month":"2025-10","entity_type":"company","active":55,"c6":86,"r6":49,"p6":57.0,"c12":104,"r12":50,"p12":48.1},
+{"month":"2025-10","entity_type":"individual","active":41,"c6":66,"r6":34,"p6":51.5,"c12":85,"r12":34,"p12":40.0},
+{"month":"2025-11","entity_type":"company","active":49,"c6":89,"r6":46,"p6":51.7,"c12":105,"r12":46,"p12":43.8},
+{"month":"2025-11","entity_type":"individual","active":52,"c6":69,"r6":41,"p6":59.4,"c12":88,"r12":42,"p12":47.7},
+{"month":"2025-12","entity_type":"company","active":50,"c6":88,"r6":49,"p6":55.7,"c12":108,"r12":49,"p12":45.4},
+{"month":"2025-12","entity_type":"individual","active":49,"c6":77,"r6":44,"p6":57.1,"c12":94,"r12":44,"p12":46.8},
+{"month":"2026-01","entity_type":"company","active":52,"c6":86,"r6":48,"p6":55.8,"c12":106,"r12":49,"p12":46.2},
+{"month":"2026-01","entity_type":"individual","active":52,"c6":81,"r6":48,"p6":59.3,"c12":96,"r12":48,"p12":50.0}
+];
+
+const biz = raw.filter(r => r.entity_type === 'company');
+const ind = raw.filter(r => r.entity_type === 'individual');
+const labels = biz.map(r => r.month);
+
+// KPIs
+const latestB = biz[biz.length-1], latestI = ind[ind.length-1];
+const avg6B = (biz.reduce((s,r)=>s+r.p6,0)/biz.length).toFixed(1);
+const avg6I = (ind.reduce((s,r)=>s+r.p6,0)/ind.length).toFixed(1);
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi"><div class="label">Business 6m Retention</div><div class="value" style="color:var(--blue)">${latestB.p6}%</div><div class="sub">Jan 2026</div></div>
+  <div class="kpi"><div class="label">Individual 6m Retention</div><div class="value" style="color:var(--green)">${latestI.p6}%</div><div class="sub">Jan 2026</div></div>
+  <div class="kpi"><div class="label">Business 12m Retention</div><div class="value" style="color:var(--purple)">${latestB.p12}%</div><div class="sub">Jan 2026</div></div>
+  <div class="kpi"><div class="label">Individual 12m Retention</div><div class="value" style="color:var(--orange)">${latestI.p12}%</div><div class="sub">Jan 2026</div></div>
+  <div class="kpi"><div class="label">Avg 6m (Business)</div><div class="value">${avg6B}%</div><div class="sub">19-month avg</div></div>
+  <div class="kpi"><div class="label">Avg 6m (Individual)</div><div class="value">${avg6I}%</div><div class="sub">19-month avg</div></div>
+`;
+
+const baseOpts = (title, yLabel) => ({
+  responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+  plugins:{title:{display:!!title,text:title,font:{size:13}},legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:16,font:{size:11}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+'%'}}},
+  scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{title:{display:!!yLabel,text:yLabel},ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}}
+});
+
+// 6m chart
+new Chart(document.getElementById('chart6m'),{type:'line',data:{labels,datasets:[
+  {label:'Business',data:biz.map(r=>r.p6),borderColor:'#2563eb',backgroundColor:'#2563eb22',borderWidth:2.5,pointRadius:3,tension:0.3,fill:false},
+  {label:'Individual',data:ind.map(r=>r.p6),borderColor:'#059669',backgroundColor:'#05966922',borderWidth:2.5,borderDash:[6,4],pointRadius:3,tension:0.3,fill:false}
+]},options:baseOpts(null,'Retention %')});
+
+// 12m chart
+new Chart(document.getElementById('chart12m'),{type:'line',data:{labels,datasets:[
+  {label:'Business',data:biz.map(r=>r.p12),borderColor:'#7c3aed',backgroundColor:'#7c3aed22',borderWidth:2.5,pointRadius:3,tension:0.3,fill:false},
+  {label:'Individual',data:ind.map(r=>r.p12),borderColor:'#ea580c',backgroundColor:'#ea580c22',borderWidth:2.5,borderDash:[6,4],pointRadius:3,tension:0.3,fill:false}
+]},options:baseOpts(null,'Retention %')});
+
+// Gap chart
+const gap6 = labels.map((_,i) => (biz[i].p6 - ind[i].p6).toFixed(1));
+const gap12 = labels.map((_,i) => (biz[i].p12 - ind[i].p12).toFixed(1));
+new Chart(document.getElementById('chartGap'),{type:'bar',data:{labels,datasets:[
+  {label:'6m Gap (Biz - Ind)',data:gap6,backgroundColor:gap6.map(v=>v>=0?'#2563eb88':'#059669aa'),borderRadius:4},
+  {label:'12m Gap (Biz - Ind)',data:gap12,backgroundColor:gap12.map(v=>v>=0?'#7c3aed88':'#ea580caa'),borderRadius:4}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index'},plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:16,font:{size:11}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+'pp'}}},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{title:{display:true,text:'pp difference'},grid:{color:'#f1f5f9'},ticks:{callback:v=>v+'pp'}}}}});
+
+// Cohort sizes
+new Chart(document.getElementById('chartCohort6m'),{type:'bar',data:{labels,datasets:[
+  {label:'Business 6m Cohort',data:biz.map(r=>r.c6),backgroundColor:'#2563eb66',borderRadius:3},
+  {label:'Individual 6m Cohort',data:ind.map(r=>r.c6),backgroundColor:'#05966966',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'6-Month Cohort Sizes',font:{size:13}},legend:{position:'bottom',labels:{usePointStyle:true,padding:12,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}},y:{grid:{color:'#f1f5f9'}}}}});
+
+new Chart(document.getElementById('chartCohort12m'),{type:'bar',data:{labels,datasets:[
+  {label:'Business 12m Cohort',data:biz.map(r=>r.c12),backgroundColor:'#7c3aed66',borderRadius:3},
+  {label:'Individual 12m Cohort',data:ind.map(r=>r.c12),backgroundColor:'#ea580c66',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'12-Month Cohort Sizes',font:{size:13}},legend:{position:'bottom',labels:{usePointStyle:true,padding:12,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}},y:{grid:{color:'#f1f5f9'}}}}});
+
+// Table
+let currentTab = 'biz';
+function showTable(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().startsWith(tab==='biz'?'b':'i')));
+  const d = tab === 'biz' ? biz : ind;
+  const name = tab === 'biz' ? 'Business' : 'Individual';
+  let html = `<thead><tr><th>Month</th><th>Active</th><th>6m Cohort</th><th>6m Retained</th><th>6m Ret%</th><th>12m Cohort</th><th>12m Retained</th><th>12m Ret%</th></tr></thead><tbody>`;
+  d.forEach((r,i) => {
+    const prev6 = i > 0 ? d[i-1].p6 : null;
+    const prev12 = i > 0 ? d[i-1].p12 : null;
+    const arrow6 = prev6 !== null ? (r.p6 > prev6 ? ' <span class="badge badge-up">▲</span>' : r.p6 < prev6 ? ' <span class="badge badge-down">▼</span>' : '') : '';
+    const arrow12 = prev12 !== null ? (r.p12 > prev12 ? ' <span class="badge badge-up">▲</span>' : r.p12 < prev12 ? ' <span class="badge badge-down">▼</span>' : '') : '';
+    html += `<tr><td>${r.month}</td><td>${r.active}</td><td>${r.c6}</td><td>${r.r6}</td><td>${r.p6}%${arrow6}</td><td>${r.c12}</td><td>${r.r12}</td><td>${r.p12}%${arrow12}</td></tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('dataTable').innerHTML = html;
+}
+showTable('biz');
+</script>
+</body>
+</html>

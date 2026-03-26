@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swastik's Cowork Master Plan</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3450;
+    --accent: #6c72ff;
+    --accent2: #00c2a8;
+    --accent3: #ff7043;
+    --accent4: #ffd740;
+    --text: #e8eaf6;
+    --muted: #8892b0;
+    --mini-color: #00c2a8;
+    --mba-color: #6c72ff;
+    --either-color: #ffd740;
+    --personal-color: #ff7043;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 32px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+  h2 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 16px; letter-spacing: 0.3px; }
+  h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+
+  .section { margin-bottom: 40px; }
+
+  /* Sync Architecture */
+  .arch-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .arch-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .arch-node .icon { font-size: 24px; margin-bottom: 4px; }
+  .arch-node .name { font-size: 13px; font-weight: 700; color: #fff; }
+  .arch-node .desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .arch-arrow { color: var(--muted); font-size: 20px; }
+  .arch-center {
+    background: linear-gradient(135deg, rgba(108,114,255,0.15), rgba(0,194,168,0.15));
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 200px;
+  }
+  .arch-center .icon { font-size: 28px; margin-bottom: 4px; }
+  .arch-center .name { font-size: 14px; font-weight: 700; color: var(--accent); }
+  .arch-center .desc { font-size: 11px; color: var(--muted); }
+
+  .rule-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .rule {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-left: 3px solid;
+  }
+  .rule.mini { border-color: var(--mini-color); }
+  .rule.mba { border-color: var(--mba-color); }
+  .rule .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .rule.mini .label { color: var(--mini-color); }
+  .rule.mba .label { color: var(--mba-color); }
+  .rule p { font-size: 13px; color: var(--muted); }
+
+  /* Device Cards */
+  .devices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .device-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .device-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .device-header .icon { font-size: 28px; }
+  .device-header .info .name { font-size: 15px; font-weight: 700; color: #fff; }
+  .device-header .info .role { font-size: 12px; }
+  .device-header.mini-header { background: rgba(0,194,168,0.08); }
+  .device-header.mini-header .info .role { color: var(--mini-color); }
+  .device-header.mba-header { background: rgba(108,114,255,0.08); }
+  .device-header.mba-header .info .role { color: var(--mba-color); }
+  .device-header.mba2-header { background: rgba(255,112,67,0.08); }
+  .device-header.mba2-header .info .role { color: var(--accent3); }
+  .device-header.mobile-header { background: rgba(255,215,64,0.08); }
+  .device-header.mobile-header .info .role { color: var(--accent4); }
+
+  .device-body { padding: 16px 20px; }
+  .use-case-group { margin-bottom: 16px; }
+  .use-case-group:last-child { margin-bottom: 0; }
+  .group-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .skill-pill {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 11px;
+    color: var(--text);
+    margin: 2px 3px 2px 0;
+  }
+  .skill-pill.scheduled {
+    border-color: var(--mini-color);
+    color: var(--mini-color);
+    background: rgba(0,194,168,0.08);
+  }
+
+  /* Domain Tabs */
+  .domains-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .domain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .domain-icon { font-size: 24px; margin-bottom: 8px; }
+  .domain-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .domain-workspace {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .ws-team { background: rgba(108,114,255,0.15); color: var(--mba-color); }
+  .ws-personal { background: rgba(255,112,67,0.15); color: var(--accent3); }
+  .domain-items { list-style: none; }
+  .domain-items li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .domain-items li::before { content: "→"; color: var(--accent); flex-shrink: 0; font-size: 11px; margin-top: 1px; }
+
+  /* Setup Steps */
+  .steps { counter-reset: steps; }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px 18px 60px;
+    margin-bottom: 12px;
+    position: relative;
+    counter-increment: steps;
+  }
+  .step::before {
+    content: counter(steps);
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 28px;
+    text-align: center;
+  }
+  .step-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: var(--muted); }
+  .step-detail {
+    margin-top: 8px;
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'SF Mono', 'Monaco', monospace;
+  }
+
+  /* Schedule Table */
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .schedule-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .schedule-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .schedule-table tr:last-child td { border-bottom: none; }
+  .schedule-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag-work { background: rgba(108,114,255,0.15); color: var(--mba-color); }
+  .tag-invest { background: rgba(0,194,168,0.15); color: var(--mini-color); }
+  .tag-personal { background: rgba(255,112,67,0.15); color: var(--accent3); }
+
+  .callout {
+    background: rgba(108,114,255,0.08);
+    border: 1px solid rgba(108,114,255,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .callout strong { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .devices-grid, .domains-grid, .rule-box { grid-template-columns: 1fr; }
+    .arch-flow { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Swastik's Cowork Master Plan</h1>
+<p class="subtitle">Cross-device architecture · Device assignment · Scheduled automation · Domain routing</p>
+
+<!-- SECTION 1: THE SYNC ARCHITECTURE -->
+<div class="section">
+  <h2>1 — How Everything Stays In Sync</h2>
+  <div class="arch-box">
+    <div class="callout">
+      <strong>The core principle:</strong> Both Macs point to the <strong>same iCloud Drive folder</strong> as their Cowork workspace. Your memory (CLAUDE.md), all outputs, and reference files live there. Work done on your MacBook Air is immediately visible on your Mac Mini — you never redo context.
+    </div>
+
+    <div class="arch-flow">
+      <div class="arch-node">
+        <div class="icon">💻</div>
+        <div class="name">MacBook Air 16GB</div>
+        <div class="desc">Interactive sessions</div>
+      </div>
+      <div class="arch-arrow">⇄</div>
+      <div class="arch-center">
+        <div class="icon">☁️</div>
+        <div class="name">iCloud Drive / Cowork</div>
+        <div class="desc">CLAUDE.md · memory/ · outputs/</div>
+      </div>
+      <div class="arch-arrow">⇄</div>
+      <div class="arch-node">
+        <div class="icon">🖥️</div>
+        <div class="name">Mac Mini</div>
+        <div class="desc">Scheduled automation</div>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <div class="rule mini">
+        <div class="label">🟢 Mac Mini Rule</div>
+        <p>Runs tasks <strong>without you</strong>. Scheduled jobs fire at set times, write outputs to the shared folder, and push notifications to Slack/Gmail. You wake up to work already done.</p>
+      </div>
+      <div class="rule mba">
+        <div class="label">🔵 MacBook Air 16GB Rule</div>
+        <p>Runs tasks <strong>with you</strong>. Every interactive Cowork session — research, documents, planning, analysis — happens here. 16GB RAM handles heavy multi-plugin workflows.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: DEVICE ASSIGNMENTS -->
+<div class="section">
+  <h2>2 — What Runs Where</h2>
+  <div class="devices-grid">
+
+    <!-- Mac Mini -->
+    <div class="device-card">
+      <div class="device-header mini-header">
+        <div class="icon">🖥️</div>
+        <div class="info">
+          <div class="name">Mac Mini</div>
+          <div class="role">Always-On Automation Hub</div>
+        </div>
+      </div>
+      <div class="device-body">
+        <div class="use-case-group">
+          <div class="group-label">⏰ Scheduled — Winvesta/Work</div>
+          <span class="skill-pill scheduled">weekly-digest (Fri 5pm)</span>
+          <span class="skill-pill scheduled">task-status-sync (Tue 9am)</span>
+          <span class="skill-pill scheduled">pipeline-review (Mon 8am)</span>
+          <span class="skill-pill scheduled">GA weekly report (Mon 8am)</span>
+          <span class="skill-pill scheduled">Metabase data pull (daily)</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">⏰ Scheduled — Investment</div>
+          <span class="skill-pill scheduled">investment digest (Sun 7pm)</span>
+          <span class="skill-pill scheduled">morning-note (weekdays 7am)</span>
+          <span class="skill-pill scheduled">portfolio monitor (weekly)</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">⏰ Scheduled — Personal</div>
+          <span class="skill-pill scheduled">daily briefing (7am weekdays)</span>
+          <span class="skill-pill scheduled">weekly priorities (Sun 8pm)</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">📤 All outputs → shared iCloud folder</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MacBook Air 16GB -->
+    <div class="device-card">
+      <div class="device-header mba-header">
+        <div class="icon">💻</div>
+        <div class="info">
+          <div class="name">MacBook Air 16GB</div>
+          <div class="role">Primary Interactive Session Machine</div>
+        </div>
+      </div>
+      <div class="device-body">
+        <div class="use-case-group">
+          <div class="group-label">🏢 CEO / Winvesta Work</div>
+          <span class="skill-pill">sprint-planning</span>
+          <span class="skill-pill">close-sprint / sprint-start</span>
+          <span class="skill-pill">create-plan-doc</span>
+          <span class="skill-pill">plan-review</span>
+          <span class="skill-pill">incident-log</span>
+          <span class="skill-pill">backlog-task</span>
+          <span class="skill-pill">release-notes</span>
+          <span class="skill-pill">team-load</span>
+          <span class="skill-pill">stakeholder-update</span>
+          <span class="skill-pill">product-management:*</span>
+          <span class="skill-pill">engineering:system-design</span>
+          <span class="skill-pill">legal:contract-review</span>
+          <span class="skill-pill">hr:*</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">📈 Investment Analysis</div>
+          <span class="skill-pill">equity-research:initiate</span>
+          <span class="skill-pill">equity-research:earnings</span>
+          <span class="skill-pill">financial-analysis:dcf</span>
+          <span class="skill-pill">financial-analysis:comps</span>
+          <span class="skill-pill">private-equity:screen-deal</span>
+          <span class="skill-pill">no-bs-strategy</span>
+          <span class="skill-pill">business-model-generation</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">✍️ Writing / Content</div>
+          <span class="skill-pill">linkedin-operating-system</span>
+          <span class="skill-pill">ogilvy-prose-style</span>
+          <span class="skill-pill">internal-comms</span>
+          <span class="skill-pill">winvesta-brand</span>
+          <span class="skill-pill">content-operating-system</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">📊 Heavy Documents</div>
+          <span class="skill-pill">pptx</span>
+          <span class="skill-pill">docx</span>
+          <span class="skill-pill">xlsx</span>
+          <span class="skill-pill">data:build-dashboard</span>
+          <span class="skill-pill">canvas-design</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">🔍 Sales / GTM</div>
+          <span class="skill-pill">apollo:prospect</span>
+          <span class="skill-pill">sales:call-prep</span>
+          <span class="skill-pill">sales:competitive-intelligence</span>
+          <span class="skill-pill">marketing:campaign-plan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second MacBook Air -->
+    <div class="device-card">
+      <div class="device-header mba2-header">
+        <div class="icon">💻</div>
+        <div class="info">
+          <div class="name">MacBook Air (8GB)</div>
+          <div class="role">Secondary / Travel / Light Work</div>
+        </div>
+      </div>
+      <div class="device-body">
+        <div class="use-case-group">
+          <div class="group-label">✅ Good For</div>
+          <span class="skill-pill">Reading outputs from shared folder</span>
+          <span class="skill-pill">Quick writing tasks</span>
+          <span class="skill-pill">Simple Slack/Gmail drafts</span>
+          <span class="skill-pill">Light research queries</span>
+          <span class="skill-pill">customer-support:draft-response</span>
+          <span class="skill-pill">legal:triage-nda</span>
+          <span class="skill-pill">productivity:task-management</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">⚠️ Avoid Heavy Sessions</div>
+          <span class="skill-pill">No financial modeling</span>
+          <span class="skill-pill">No large document creation</span>
+          <span class="skill-pill">No multi-plugin deep research</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS / Android -->
+    <div class="device-card">
+      <div class="device-header mobile-header">
+        <div class="icon">📱</div>
+        <div class="info">
+          <div class="name">iOS + Android</div>
+          <div class="role">Consume, Approve, Quick Input</div>
+        </div>
+      </div>
+      <div class="device-body">
+        <div class="use-case-group">
+          <div class="group-label">✅ Mobile Use Cases</div>
+          <span class="skill-pill">Read scheduled outputs</span>
+          <span class="skill-pill">Quick Claude.ai Q&A</span>
+          <span class="skill-pill">Approve/reject Slack drafts</span>
+          <span class="skill-pill">Review morning briefing</span>
+          <span class="skill-pill">Investment digest reading</span>
+          <span class="skill-pill">Quick backlog voice notes</span>
+        </div>
+        <div class="use-case-group">
+          <div class="group-label">📋 Rule</div>
+          <span class="skill-pill">Consume outputs, don't produce sessions</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 3: DOMAIN ROUTING -->
+<div class="section">
+  <h2>3 — Which Workspace for Which Domain</h2>
+  <div class="domains-grid">
+
+    <div class="domain-card">
+      <div class="domain-icon">🏢</div>
+      <div class="domain-name">Winvesta / Company Ops</div>
+      <span class="domain-workspace ws-team">Team Workspace</span>
+      <ul class="domain-items">
+        <li>All engineering workflows (sprints, incidents, releases)</li>
+        <li>Product management and roadmap</li>
+        <li>Sales pipeline and GTM (Apollo, HubSpot)</li>
+        <li>Analytics (GA, Metabase)</li>
+        <li>Team communications (Slack, Notion)</li>
+        <li>HR and legal matters for the company</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-icon">📈</div>
+      <div class="domain-name">Investments</div>
+      <span class="domain-workspace ws-personal">Personal Workspace (Max)</span>
+      <ul class="domain-items">
+        <li>Equity research and stock screening</li>
+        <li>DCF, comps, financial modeling</li>
+        <li>Deal screening (PE/VC inbounds)</li>
+        <li>Portfolio monitoring and digests</li>
+        <li>Sector and macro analysis</li>
+        <li>No-BS strategy for companies you're watching</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-icon">🧭</div>
+      <div class="domain-name">CEO External</div>
+      <span class="domain-workspace ws-team">Team Workspace</span>
+      <ul class="domain-items">
+        <li>Investor updates and board comms</li>
+        <li>LinkedIn content and thought leadership</li>
+        <li>Media and PR drafts</li>
+        <li>Partnership outreach</li>
+        <li>Conference and event prep</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-icon">🏠</div>
+      <div class="domain-name">Personal</div>
+      <span class="domain-workspace ws-personal">Personal Workspace (Max)</span>
+      <ul class="domain-items">
+        <li>Personal calendar and planning</li>
+        <li>Health, travel, personal finance</li>
+        <li>Private correspondence</li>
+        <li>Family logistics</li>
+        <li>Memory system for personal context</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-icon">🌍</div>
+      <div class="domain-name">External Interests</div>
+      <span class="domain-workspace ws-personal">Personal Workspace (Max)</span>
+      <ul class="domain-items">
+        <li>Research on topics you follow</li>
+        <li>Learning and reading synthesis</li>
+        <li>Advisory / board work (if any)</li>
+        <li>Community / industry involvement</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-icon">📊</div>
+      <div class="domain-name">Winvesta Data</div>
+      <span class="domain-workspace ws-team">Team Workspace</span>
+      <ul class="domain-items">
+        <li>Supabase queries and analysis</li>
+        <li>Metabase dashboards</li>
+        <li>Google Analytics reports</li>
+        <li>KPI tracking and variance analysis</li>
+        <li>User behaviour and product analytics</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 4: MAC MINI SCHEDULED TASKS -->
+<div class="section">
+  <h2>4 — Mac Mini Scheduled Task Calendar</h2>
+  <div class="arch-box">
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Task</th>
+          <th>Skill / Tools</th>
+          <th>Domain</th>
+          <th>Output Goes To</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Weekdays 7:00am</td>
+          <td>Daily briefing — calendar, Slack highlights, open Notion tasks, email priority</td>
+          <td>sales:daily-briefing + gcal + gmail + Slack + Notion</td>
+          <td><span class="tag tag-work">Work</span></td>
+          <td>Email + shared folder</td>
+        </tr>
+        <tr>
+          <td>Weekdays 7:15am</td>
+          <td>Investment morning note — key movers, news on watchlist companies</td>
+          <td>equity-research:morning-note + web search</td>
+          <td><span class="tag tag-invest">Invest</span></td>
+          <td>Shared folder</td>
+        </tr>
+        <tr>
+          <td>Monday 8:00am</td>
+          <td>Weekly sales pipeline review — deal health, follow-ups needed</td>
+          <td>sales:pipeline-review + HubSpot + Apollo</td>
+          <td><span class="tag tag-work">Work</span></td>
+          <td>Slack #sales + shared folder</td>
+        </tr>
+        <tr>
+          <td>Tuesday 9:00am</td>
+          <td>Sprint task status sync — orphaned tasks, status mismatches</td>
+          <td>winvesta-eng-workflows:task-status-sync</td>
+          <td><span class="tag tag-work">Work</span></td>
+          <td>Slack #eng + shared folder</td>
+        </tr>
+        <tr>
+          <td>Tuesday 9:30am</td>
+          <td>Team load check — who's overloaded this sprint</td>
+          <td>winvesta-eng-workflows:team-load</td>
+          <td><span class="tag tag-work">Work</span></td>
+          <td>Slack #eng-leads</td>
+        </tr>
+        <tr>
+          <td>Friday 5:00pm</td>
+          <td>Weekly engineering digest — what shipped, sprint status, blockers</td>
+          <td>winvesta-eng-workflows:weekly-digest</td>
+          <td><span class="tag tag-work">Work</span></td>
+          <td>Slack #leadership + shared folder</td>
+        </tr>
+        <tr>
+          <td>Sunday 7:00pm</td>
+          <td>Investment portfolio digest — week in review, key developments</td>
+          <td>equity-research + web search + portfolio tracking</td>
+          <td><span class="tag tag-invest">Invest</span></td>
+          <td>Shared folder (read Mon morning)</td>
+        </tr>
+        <tr>
+          <td>Sunday 8:00pm</td>
+          <td>Weekly priorities brief — top 3 focus areas for the week</td>
+          <td>gcal + Notion + Gmail + productivity:task-management</td>
+          <td><span class="tag tag-personal">Personal</span></td>
+          <td>Email + shared folder</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SECTION 5: SETUP STEPS -->
+<div class="section">
+  <h2>5 — Setup Sequence (Do This Once)</h2>
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-title">Create your shared Cowork folder in iCloud Drive</div>
+      <div class="step-desc">Make a folder called "Cowork" inside your iCloud Drive. This becomes the workspace folder you select in Cowork on both Macs. Everything syncs through here automatically.</div>
+      <div class="step-detail">iCloud Drive / Cowork / <br>├── CLAUDE.md  (auto-created by memory skill)<br>├── memory/    (auto-created by memory skill)<br>└── outputs/   (your deliverables)</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Set this folder as workspace on BOTH Macs</div>
+      <div class="step-desc">Open Cowork on your MacBook Air 16GB and select the iCloud Drive/Cowork folder. Do the same on your Mac Mini. Both machines now read from and write to the same location.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Run the memory setup on MacBook Air 16GB (once)</div>
+      <div class="step-desc">Use the <strong>productivity:memory-management</strong> skill to tell Cowork about you — your role, company, priorities, shorthand, team names, and key context. This writes CLAUDE.md to the shared folder. Both machines immediately benefit from it.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Set up all scheduled tasks on Mac Mini</div>
+      <div class="step-desc">Go to your Mac Mini, open Cowork, and use the <strong>schedule</strong> skill to create each automation from the calendar above. Because it points to the same iCloud folder, the outputs appear in the same place you work from on your MacBook Air.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Set up separate memory for Personal workspace</div>
+      <div class="step-desc">In Claude.ai (personal workspace / Max), create a Project for investments and one for personal matters. Projects in Claude.ai store context per-project — this keeps your investment thinking separate from your Winvesta work.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Verify and test one scheduled task</div>
+      <div class="step-desc">Set the daily briefing to fire in 5 minutes on Mac Mini, confirm it runs, and check that the output appears in your iCloud Drive/Cowork/outputs folder. If that works, the entire architecture is validated.</div>
+    </div>
+
+  </div>
+</div>
+
+<p style="color: var(--muted); font-size: 12px; text-align: center; margin-top: 32px;">
+  Swastik's Cowork Architecture · Updated March 2026
+</p>
+
+</body>
+</html>

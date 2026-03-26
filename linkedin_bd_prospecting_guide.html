@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn BD Prospecting — Deutsche Bank Alumni & PE/VC Contacts</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: #2e3250;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #8892b0;
+    --code-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 50%, #1a1025 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 40px 40px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(79,110,247,0.15);
+    border: 1px solid rgba(79,110,247,0.35);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #818cf8;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #e2e8f0 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 640px;
+  }
+  .pipeline-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 32px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .pipe-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pipe-step .num {
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .pipe-arrow {
+    color: var(--muted);
+    font-size: 16px;
+    padding: 0 2px;
+  }
+  .main { max-width: 960px; margin: 0 auto; padding: 0 40px 80px; }
+
+  .section {
+    margin-top: 48px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+  p { color: var(--muted); margin-bottom: 12px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card p { margin-bottom: 0; font-size: 14px; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .info-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .info-chip .val {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .info-chip .lbl {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .steps-list {
+    list-style: none;
+    counter-reset: step;
+  }
+  .steps-list li {
+    counter-increment: step;
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .steps-list li::before {
+    content: counter(step);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .steps-list li .step-body { flex: 1; }
+  .steps-list li strong { color: var(--text); font-weight: 600; }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    color: #cdd6f4;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .code-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .kw { color: #cba6f7; }
+  .st { color: #a6e3a1; }
+  .cm { color: #585b70; font-style: italic; }
+  .nm { color: #89b4fa; }
+  .op { color: #89dceb; }
+  .nb { color: #f38ba8; }
+  .fn { color: #fab387; }
+
+  .warning-box {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .warning-box .icon { font-size: 18px; flex-shrink: 0; }
+  .warning-box p { margin: 0; color: #fcd34d; font-size: 14px; }
+
+  .tip-box {
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .tip-box .icon { font-size: 18px; flex-shrink: 0; }
+  .tip-box p { margin: 0; color: #86efac; font-size: 14px; }
+
+  .tag {
+    display: inline-block;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .tag-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag-blue { background: rgba(79,110,247,0.15); color: #818cf8; }
+  .tag-yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .tag-red { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .output-preview {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--muted);
+    overflow-x: auto;
+  }
+  .output-preview .row { display: flex; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .output-preview .cell { padding: 3px 8px; background: var(--surface2); border-radius: 4px; color: var(--text); }
+  .output-preview .header .cell { color: var(--accent); font-weight: 700; }
+
+  .cost-table td:nth-child(3), .cost-table td:nth-child(4) { color: #4ade80; }
+
+  @media (max-width: 640px) {
+    .hero, .main { padding-left: 20px; padding-right: 20px; }
+    h1 { font-size: 26px; }
+    .pipeline-bar { flex-direction: column; align-items: flex-start; }
+    .pipe-arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">📋 BD Prospecting Playbook</div>
+  <h1>LinkedIn → Apify → Opportunity List</h1>
+  <p>A complete step-by-step system for surfacing Deutsche Bank alumni and PE/VC contacts from your LinkedIn network — filtered to non-India locations only — ready for financial services BD outreach.</p>
+
+  <div class="pipeline-bar">
+    <div class="pipe-step"><span class="num">1</span> Export LinkedIn CSV</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">2</span> Prepare Profile URLs</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">3</span> Enrich via Apify</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">4</span> Filter & Score</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">5</span> BD Outreach List</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ACTOR SELECTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Actor Selection</div>
+      <h2>The Right Apify Tool for This Job</h2>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-chip">
+        <div class="val">100%</div>
+        <div class="lbl">Success Rate</div>
+      </div>
+      <div class="info-chip">
+        <div class="val">$4/1k</div>
+        <div class="lbl">Profiles (no email)</div>
+      </div>
+      <div class="info-chip">
+        <div class="val">$10/1k</div>
+        <div class="lbl">Profiles + email</div>
+      </div>
+      <div class="info-chip">
+        <div class="val">9,791</div>
+        <div class="lbl">Users on platform</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 harvestapi/linkedin-profile-scraper — Primary Actor</div>
+      <p>No LinkedIn cookies required. Scrapes full work history (all past employers + dates), current company, location with parsed city/country data, education, skills, and connection count. 100% success rate in production. This is what powers the Deutsche Bank alumni detection.</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Actor</th><th>Cost</th><th>Cookies?</th><th>Success</th><th>Best For</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>harvestapi/linkedin-profile-scraper</strong> <span class="tag tag-green">✓ Recommended</span></td>
+          <td>$4/1k profiles</td>
+          <td><span class="tag tag-green">None</span></td>
+          <td>100%</td>
+          <td>Full work history enrichment</td>
+        </tr>
+        <tr>
+          <td>dev_fusion/Linkedin-Profile-Scraper</td>
+          <td>$10/1k</td>
+          <td><span class="tag tag-green">None</span></td>
+          <td>99.9%</td>
+          <td>When email/phone also needed</td>
+        </tr>
+        <tr>
+          <td>addeus/get-connections</td>
+          <td>Free</td>
+          <td><span class="tag tag-red">li_at required</span></td>
+          <td>38.9%</td>
+          <td><span class="tag tag-red">Avoid — unreliable</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Step 1</div>
+      <h2>Export Your LinkedIn Connections</h2>
+    </div>
+
+    <p>LinkedIn's native export gives you every connection reliably — no scraping, no cookies, no success rate risk. This is always your starting point.</p>
+
+    <ol class="steps-list">
+      <li>
+        <div class="step-body">
+          <strong>Go to LinkedIn Settings</strong><br>
+          Navigate to <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px;">Me → Settings & Privacy → Data privacy → Get a copy of your data</code>
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Request "Connections" data only</strong><br>
+          Select the "Connections" checkbox (not the full archive — that takes days). Click Request archive.
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Download within 10 minutes</strong><br>
+          LinkedIn emails you a link. Download and unzip. You'll find <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px;">Connections.csv</code>.
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Check the CSV columns</strong><br>
+          The file has: First Name, Last Name, Email Address, Company, Position, Connected On, <strong>and crucially — Profile URL</strong> (the LinkedIn profile link for each person).
+        </div>
+      </li>
+    </ol>
+
+    <div class="tip-box">
+      <div class="icon">💡</div>
+      <p>If Profile URL is missing in the CSV, run the prepare script below — it builds URLs from the public identifier (last segment of each person's LinkedIn URL) which LinkedIn sometimes exports separately.</p>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Step 2</div>
+      <h2>Prepare Profile URLs from the CSV</h2>
+    </div>
+
+    <p>This Python script reads your LinkedIn Connections.csv export, extracts profile URLs, and produces a clean JSON file of URLs ready to feed into Apify.</p>
+
+    <div class="code-label">Python — prepare_urls.py</div>
+    <pre><span class="kw">import</span> csv
+<span class="kw">import</span> json
+<span class="kw">import</span> re
+<span class="kw">import</span> sys
+
+<span class="cm"># ─── CONFIG ──────────────────────────────────────────────────────────────</span>
+INPUT_CSV    = <span class="st">"Connections.csv"</span>   <span class="cm"># path to your LinkedIn export</span>
+OUTPUT_JSON  = <span class="st">"profile_urls.json"</span>  <span class="cm"># will be created by this script</span>
+<span class="cm"># ─────────────────────────────────────────────────────────────────────────</span>
+
+<span class="kw">def</span> <span class="fn">clean_url</span>(raw: <span class="nb">str</span>) -> <span class="nb">str</span>:
+    <span class="st">"""Normalise a LinkedIn profile URL."""</span>
+    raw = raw.strip()
+    <span class="kw">if not</span> raw:
+        <span class="kw">return</span> <span class="st">""</span>
+    <span class="cm"># Already a full URL</span>
+    <span class="kw">if</span> raw.startswith(<span class="st">"http"</span>):
+        <span class="cm"># strip query strings</span>
+        <span class="kw">return</span> raw.split(<span class="st">"?"</span>)[<span class="nm">0</span>].rstrip(<span class="st">"/"</span>)
+    <span class="cm"># Public identifier only (e.g. "john-doe-12345")</span>
+    <span class="kw">if</span> <span class="kw">not</span> raw.startswith(<span class="st">"/"</span>) <span class="kw">and</span> <span class="kw">not</span> raw.startswith(<span class="st">"linkedin"</span>):
+        <span class="kw">return</span> <span class="st">f"https://www.linkedin.com/in/</span>{raw}<span class="st">"</span>
+    <span class="kw">return</span> <span class="st">f"https://www.linkedin.com</span>{raw}<span class="st">"</span>
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    urls = []
+    skipped = <span class="nm">0</span>
+
+    <span class="kw">with</span> open(INPUT_CSV, encoding=<span class="st">"utf-8-sig"</span>) <span class="kw">as</span> f:
+        reader = csv.DictReader(f)
+        <span class="kw">for</span> row <span class="kw">in</span> reader:
+            <span class="cm"># LinkedIn may use different column names</span>
+            url_raw = (
+                row.get(<span class="st">"Profile URL"</span>, <span class="st">""</span>) <span class="kw">or</span>
+                row.get(<span class="st">"URL"</span>, <span class="st">""</span>) <span class="kw">or</span>
+                row.get(<span class="st">"linkedin_url"</span>, <span class="st">""</span>) <span class="kw">or</span>
+                row.get(<span class="st">"LinkedIn Profile"</span>, <span class="st">""</span>)
+            )
+            url = clean_url(url_raw)
+            <span class="kw">if</span> url <span class="kw">and</span> <span class="st">"linkedin.com/in/"</span> <span class="kw">in</span> url:
+                urls.append(url)
+            <span class="kw">else</span>:
+                skipped += <span class="nm">1</span>
+
+    <span class="kw">with</span> open(OUTPUT_JSON, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        json.dump(urls, f, indent=<span class="nm">2</span>)
+
+    print(<span class="st">f"✅  Extracted </span>{<span class="nb">len</span>(urls)}<span class="st"> profile URLs → {OUTPUT_JSON}"</span>)
+    <span class="kw">if</span> skipped:
+        print(<span class="st">f"⚠️   Skipped {skipped} rows (no URL found) — check column names in CSV"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    main()</pre>
+
+    <div class="tip-box">
+      <div class="icon">💡</div>
+      <p>Run: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">python3 prepare_urls.py</code> — it outputs <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">profile_urls.json</code> containing a plain array of LinkedIn URLs.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Step 3</div>
+      <h2>Run the Apify Enrichment Actor</h2>
+    </div>
+
+    <p>Feed your profile URLs into <strong>harvestapi/linkedin-profile-scraper</strong> to get full work histories, locations, and company data for every contact.</p>
+
+    <h3>Option A — Apify Console (no-code)</h3>
+    <ol class="steps-list">
+      <li>
+        <div class="step-body"><strong>Go to</strong> <a href="https://apify.com/harvestapi/linkedin-profile-scraper" style="color:var(--accent);">apify.com/harvestapi/linkedin-profile-scraper</a> and click <em>Try for free</em>.</div>
+      </li>
+      <li>
+        <div class="step-body"><strong>Set Mode</strong> to <em>"Profile details no email ($4 per 1k)"</em> — sufficient for DB alumni + PE/VC detection.</div>
+      </li>
+      <li>
+        <div class="step-body"><strong>Paste URLs</strong> — open <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px;">profile_urls.json</code>, copy the array, and paste it into the <em>Target URLs</em> field.</div>
+      </li>
+      <li>
+        <div class="step-body"><strong>Run</strong> and wait. At 100% success rate, all profiles will complete. Download results as <strong>JSON</strong> (not CSV — JSON preserves the nested work history array).</div>
+      </li>
+    </ol>
+
+    <h3>Option B — Apify API (programmatic)</h3>
+    <div class="code-label">Python — run_apify.py</div>
+    <pre><span class="kw">import</span> json, time, requests
+
+APIFY_TOKEN = <span class="st">"YOUR_APIFY_API_TOKEN"</span>   <span class="cm"># from apify.com/account/integrations</span>
+ACTOR_ID    = <span class="st">"harvestapi/linkedin-profile-scraper"</span>
+BATCH_SIZE  = <span class="nm">500</span>   <span class="cm"># keep batches small to avoid timeouts</span>
+
+<span class="kw">with</span> open(<span class="st">"profile_urls.json"</span>) <span class="kw">as</span> f:
+    all_urls = json.load(f)
+
+<span class="cm"># Process in batches</span>
+all_results = []
+<span class="kw">for</span> i <span class="kw">in</span> range(<span class="nm">0</span>, <span class="nb">len</span>(all_urls), BATCH_SIZE):
+    batch = all_urls[i:i+BATCH_SIZE]
+    print(<span class="st">f"Running batch {i//BATCH_SIZE + 1} ({len(batch)} profiles)..."</span>)
+
+    <span class="cm"># Start the actor run</span>
+    run_resp = requests.post(
+        <span class="st">f"https://api.apify.com/v2/acts/{ACTOR_ID}/runs"</span>,
+        params={<span class="st">"token"</span>: APIFY_TOKEN},
+        json={
+            <span class="st">"profileScraperMode"</span>: <span class="st">"Profile details no email ($4 per 1k)"</span>,
+            <span class="st">"queries"</span>: batch
+        }
+    ).json()
+    run_id = run_resp[<span class="st">"data"</span>][<span class="st">"id"</span>]
+
+    <span class="cm"># Poll until finished</span>
+    <span class="kw">while True</span>:
+        status = requests.get(
+            <span class="st">f"https://api.apify.com/v2/actor-runs/{run_id}"</span>,
+            params={<span class="st">"token"</span>: APIFY_TOKEN}
+        ).json()[<span class="st">"data"</span>][<span class="st">"status"</span>]
+        <span class="kw">if</span> status <span class="kw">in</span> (<span class="st">"SUCCEEDED"</span>, <span class="st">"FAILED"</span>, <span class="st">"ABORTED"</span>):
+            <span class="kw">break</span>
+        time.sleep(<span class="nm">5</span>)
+
+    <span class="cm"># Fetch results from dataset</span>
+    dataset_id = run_resp[<span class="st">"data"</span>][<span class="st">"defaultDatasetId"</span>]
+    items = requests.get(
+        <span class="st">f"https://api.apify.com/v2/datasets/{dataset_id}/items"</span>,
+        params={<span class="st">"token"</span>: APIFY_TOKEN, <span class="st">"format"</span>: <span class="st">"json"</span>}
+    ).json()
+    all_results.extend(items)
+    print(<span class="st">f"  → Retrieved {len(items)} profiles"</span>)
+
+<span class="kw">with</span> open(<span class="st">"enriched_profiles.json"</span>, <span class="st">"w"</span>) <span class="kw">as</span> f:
+    json.dump(all_results, f, indent=<span class="nm">2</span>)
+
+print(<span class="st">f"\n✅ Total enriched: {len(all_results)} profiles → enriched_profiles.json"</span>)</pre>
+
+    <div class="warning-box">
+      <div class="icon">⚠️</div>
+      <p>Cost check: 500 profiles = $2. 1,000 profiles = $4. 5,000 profiles = $20. Run a small test batch of 50 first to verify the output schema matches what the filter script expects.</p>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Step 4</div>
+      <h2>Filter Script — Deutsche Bank Alumni & PE/VC Outside India</h2>
+    </div>
+
+    <p>This is the core filtering engine. It reads the enriched Apify JSON and applies two targeting rules with geographic exclusion.</p>
+
+    <div class="card">
+      <div class="card-title">🎯 Targeting Rules</div>
+      <p><strong>Bucket A — Deutsche Bank Alumni:</strong> Any contact who has Deutsche Bank (or DB variants) in their work history AND is currently located outside India.</p>
+      <p style="margin-top:8px"><strong>Bucket B — PE/VC Professionals:</strong> Any contact whose current company or role title contains PE/VC keywords AND is located outside India.</p>
+    </div>
+
+    <div class="code-label">Python — filter_contacts.py</div>
+    <pre><span class="kw">import</span> json
+<span class="kw">import</span> csv
+<span class="kw">import</span> re
+<span class="kw">from</span> typing <span class="kw">import</span> Any
+
+<span class="cm"># ─── CONFIG ──────────────────────────────────────────────────────────────</span>
+INPUT_JSON       = <span class="st">"enriched_profiles.json"</span>
+OUTPUT_CSV_DB    = <span class="st">"db_alumni_outside_india.csv"</span>
+OUTPUT_CSV_PEVC  = <span class="st">"pevc_outside_india.csv"</span>
+OUTPUT_CSV_ALL   = <span class="st">"all_targets.csv"</span>
+<span class="cm"># ─────────────────────────────────────────────────────────────────────────</span>
+
+<span class="cm"># Deutsche Bank name variants (case-insensitive)</span>
+DB_PATTERNS = [
+    <span class="st">r"\bdeutsche\s*bank\b"</span>,
+    <span class="st">r"\bdb\s+ag\b"</span>,
+    <span class="st">r"\bdeutsche\s*bank\s*ag\b"</span>,
+    <span class="st">r"\bdb\s+london\b"</span>,
+    <span class="st">r"\bdb\s+group\b"</span>,
+    <span class="st">r"\bdwpbank\b"</span>,      <span class="cm"># Deutsche WertpapierService Bank</span>
+]
+
+<span class="cm"># PE/VC keywords — company name OR job title</span>
+PEVC_COMPANY_PATTERNS = [
+    <span class="st">r"\bprivate\s+equity\b"</span>,
+    <span class="st">r"\bventure\s+capital\b"</span>,
+    <span class="st">r"\bventure\s+partners\b"</span>,
+    <span class="st">r"\bgrowth\s+equity\b"</span>,
+    <span class="st">r"\bgrowth\s+capital\b"</span>,
+    <span class="st">r"\bbuyout\b"</span>,
+    <span class="st">r"\bleveraged\s+buyout\b"</span>,
+    <span class="st">r"\bpe\s+fund\b"</span>,
+    <span class="st">r"\bvc\s+fund\b"</span>,
+    <span class="st">r"\bfund\s+of\s+funds\b"</span>,
+    <span class="st">r"\bportfolio\s+company\b"</span>,
+    <span class="st">r"\bmanagement\s+buyout\b"</span>,
+]
+PEVC_TITLE_PATTERNS = [
+    <span class="st">r"\bprivate\s+equity\b"</span>,
+    <span class="st">r"\bventure\s+capital\b"</span>,
+    <span class="st">r"\bventure\s+partner\b"</span>,
+    <span class="st">r"\binvestment\s+manager\b"</span>,
+    <span class="st">r"\bportfolio\s+manager\b"</span>,
+    <span class="st">r"\bgp\s+partner\b"</span>,
+    <span class="st">r"\blimited\s+partner\b"</span>,
+    <span class="st">r"\bfund\s+manager\b"</span>,
+    <span class="st">r"\bprincipal\b"</span>,          <span class="cm"># common PE title</span>
+    <span class="st">r"\bassociate\s+director\b"</span>,  <span class="cm"># PE associate</span>
+    <span class="st">r"\bmanaging\s+director\b"</span>,
+]
+<span class="cm"># Known PE/VC firm name fragments</span>
+PEVC_FIRM_NAMES = [
+    <span class="st">"blackstone"</span>, <span class="st">"kkr"</span>, <span class="st">"carlyle"</span>, <span class="st">"apollo"</span>, <span class="st">"warburg pincus"</span>,
+    <span class="st">"advent international"</span>, <span class="st">"general atlantic"</span>, <span class="st">"tpg"</span>, <span class="st">"bain capital"</span>,
+    <span class="st">"sequoia"</span>, <span class="st">"andreessen horowitz"</span>, <span class="st">"a16z"</span>, <span class="st">"accel"</span>, <span class="st">"tiger global"</span>,
+    <span class="st">"softbank vision"</span>, <span class="st">"insight partners"</span>, <span class="st">"summit partners"</span>,
+    <span class="st">"permira"</span>, <span class="st">"cinven"</span>, <span class="st">"apax"</span>, <span class="st">"bc partners"</span>, <span class="st">"cvc capital"</span>,
+    <span class="st">"vista equity"</span>, <span class="st">"francisco partners"</span>, <span class="st">"silver lake"</span>, <span class="st">"thoma bravo"</span>,
+    <span class="st">"coatue"</span>, <span class="st">"dragoneer"</span>, <span class="st">"dsg consumer"</span>, <span class="st">"nexus ventures"</span>,
+    <span class="st">"matrix partners"</span>, <span class="st">"lightspeed"</span>, <span class="st">"bessemer"</span>, <span class="st">"index ventures"</span>,
+]
+
+<span class="cm"># India location markers (exclude these)</span>
+INDIA_MARKERS = [
+    <span class="st">"india"</span>, <span class="st">"mumbai"</span>, <span class="st">"delhi"</span>, <span class="st">"bangalore"</span>, <span class="st">"bengaluru"</span>, <span class="st">"hyderabad"</span>,
+    <span class="st">"pune"</span>, <span class="st">"chennai"</span>, <span class="st">"kolkata"</span>, <span class="st">"ahmedabad"</span>, <span class="st">"gurgaon"</span>, <span class="st">"gurugram"</span>,
+    <span class="st">"noida"</span>, <span class="st">"chandigarh"</span>, <span class="st">"jaipur"</span>, <span class="st">"kochi"</span>, <span class="st">"in"</span>  <span class="cm"># country code "IN"</span>
+]
+
+
+<span class="kw">def</span> <span class="fn">matches_any</span>(text: <span class="nb">str</span>, patterns: list) -> <span class="nb">bool</span>:
+    text = (text <span class="kw">or</span> <span class="st">""</span>).lower()
+    <span class="kw">return</span> any(re.search(p, text, re.I) <span class="kw">for</span> p <span class="kw">in</span> patterns)
+
+<span class="kw">def</span> <span class="fn">is_india</span>(profile: dict) -> <span class="nb">bool</span>:
+    <span class="cm"># Check all location fields the actor may return</span>
+    location_fields = [
+        profile.get(<span class="st">"location"</span>, <span class="st">""</span>),
+        profile.get(<span class="st">"locationName"</span>, <span class="st">""</span>),
+        profile.get(<span class="st">"geoLocationName"</span>, <span class="st">""</span>),
+        profile.get(<span class="st">"countryCode"</span>, <span class="st">""</span>),
+        profile.get(<span class="st">"country"</span>, <span class="st">""</span>),
+        profile.get(<span class="st">"city"</span>, <span class="st">""</span>),
+    ]
+    combined = <span class="st">" "</span>.join(str(x) <span class="kw">for</span> x <span class="kw">in</span> location_fields <span class="kw">if</span> x).lower()
+    <span class="kw">return</span> any(marker <span class="kw">in</span> combined <span class="kw">for</span> marker <span class="kw">in</span> INDIA_MARKERS)
+
+<span class="kw">def</span> <span class="fn">get_location</span>(profile: dict) -> <span class="nb">str</span>:
+    <span class="kw">return</span> (
+        profile.get(<span class="st">"location"</span>) <span class="kw">or</span>
+        profile.get(<span class="st">"locationName"</span>) <span class="kw">or</span>
+        profile.get(<span class="st">"geoLocationName"</span>) <span class="kw">or</span>
+        <span class="st">"Unknown"</span>
+    )
+
+<span class="kw">def</span> <span class="fn">get_work_history</span>(profile: dict) -> list:
+    <span class="cm"># harvestapi returns positions in various keys</span>
+    <span class="kw">return</span> (
+        profile.get(<span class="st">"positions"</span>) <span class="kw">or</span>
+        profile.get(<span class="st">"experience"</span>) <span class="kw">or</span>
+        profile.get(<span class="st">"workHistory"</span>) <span class="kw">or</span>
+        []
+    )
+
+<span class="kw">def</span> <span class="fn">is_db_alumni</span>(profile: dict) -> tuple[<span class="nb">bool</span>, <span class="nb">str</span>]:
+    <span class="st">"""Returns (is_alumni, db_role_summary)."""</span>
+    positions = get_work_history(profile)
+    db_roles = []
+    <span class="kw">for</span> pos <span class="kw">in</span> positions:
+        company = pos.get(<span class="st">"companyName"</span>, <span class="st">""</span>) <span class="kw">or</span> pos.get(<span class="st">"company"</span>, <span class="st">""</span>)
+        title   = pos.get(<span class="st">"title"</span>, <span class="st">""</span>) <span class="kw">or</span> pos.get(<span class="st">"role"</span>, <span class="st">""</span>)
+        <span class="kw">if</span> matches_any(company, DB_PATTERNS):
+            db_roles.append(<span class="st">f"{title} @ {company}"</span>)
+    <span class="kw">return</span> (<span class="nb">bool</span>(db_roles), <span class="st">" | "</span>.join(db_roles))
+
+<span class="kw">def</span> <span class="fn">is_pevc</span>(profile: dict) -> tuple[<span class="nb">bool</span>, <span class="nb">str</span>]:
+    <span class="st">"""Returns (is_pevc, reason)."""</span>
+    positions = get_work_history(profile)
+    reasons = []
+    <span class="cm"># Check current position first</span>
+    current = positions[<span class="nm">0</span>] <span class="kw">if</span> positions <span class="kw">else</span> {}
+    cur_company = (current.get(<span class="st">"companyName"</span>, <span class="st">""</span>) <span class="kw">or</span> current.get(<span class="st">"company"</span>, <span class="st">""</span>)).lower()
+    cur_title   = (current.get(<span class="st">"title"</span>, <span class="st">""</span>) <span class="kw">or</span> current.get(<span class="st">"role"</span>, <span class="st">""</span>)).lower()
+    headline    = (profile.get(<span class="st">"headline"</span>, <span class="st">""</span>) <span class="kw">or</span> <span class="st">""</span>).lower()
+
+    <span class="kw">if</span> matches_any(cur_company, PEVC_COMPANY_PATTERNS):
+        reasons.append(<span class="st">f"Company: {current.get('companyName','')}"</span>)
+    <span class="kw">if</span> any(firm <span class="kw">in</span> cur_company <span class="kw">for</span> firm <span class="kw">in</span> PEVC_FIRM_NAMES):
+        reasons.append(<span class="st">f"Known firm: {current.get('companyName','')}"</span>)
+    <span class="kw">if</span> matches_any(cur_title, PEVC_TITLE_PATTERNS):
+        reasons.append(<span class="st">f"Title: {current.get('title','')}"</span>)
+    <span class="kw">if</span> matches_any(headline, PEVC_COMPANY_PATTERNS + PEVC_TITLE_PATTERNS):
+        reasons.append(<span class="st">f"Headline: {profile.get('headline','')}"</span>)
+
+    <span class="kw">return</span> (<span class="nb">bool</span>(reasons), <span class="st">" | "</span>.join(reasons))
+
+<span class="kw">def</span> <span class="fn">build_row</span>(profile: dict, bucket: <span class="nb">str</span>, match_reason: <span class="nb">str</span>) -> dict:
+    positions = get_work_history(profile)
+    current = positions[<span class="nm">0</span>] <span class="kw">if</span> positions <span class="kw">else</span> {}
+    <span class="kw">return</span> {
+        <span class="st">"Bucket"</span>:          bucket,
+        <span class="st">"First Name"</span>:      profile.get(<span class="st">"firstName"</span>, <span class="st">""</span>),
+        <span class="st">"Last Name"</span>:       profile.get(<span class="st">"lastName"</span>, <span class="st">""</span>),
+        <span class="st">"Headline"</span>:        profile.get(<span class="st">"headline"</span>, <span class="st">""</span>),
+        <span class="st">"Current Title"</span>:   current.get(<span class="st">"title"</span>, <span class="st">""</span>) <span class="kw">or</span> current.get(<span class="st">"role"</span>, <span class="st">""</span>),
+        <span class="st">"Current Company"</span>: current.get(<span class="st">"companyName"</span>, <span class="st">""</span>) <span class="kw">or</span> current.get(<span class="st">"company"</span>, <span class="st">""</span>),
+        <span class="st">"Location"</span>:        get_location(profile),
+        <span class="st">"Profile URL"</span>:     profile.get(<span class="st">"linkedInUrl"</span>, <span class="st">""</span>) <span class="kw">or</span> profile.get(<span class="st">"url"</span>, <span class="st">""</span>),
+        <span class="st">"Match Reason"</span>:    match_reason,
+        <span class="st">"Connections"</span>:     profile.get(<span class="st">"connectionsCount"</span>, <span class="st">""</span>),
+    }
+
+<span class="kw">def</span> <span class="fn">write_csv</span>(rows: list, path: <span class="nb">str</span>):
+    <span class="kw">if not</span> rows:
+        print(<span class="st">f"  ⚠️  No results for {path}"</span>)
+        <span class="kw">return</span>
+    <span class="kw">with</span> open(path, <span class="st">"w"</span>, newline=<span class="st">""</span>, encoding=<span class="st">"utf-8"</span>) <span class="kw">as</span> f:
+        writer = csv.DictWriter(f, fieldnames=rows[<span class="nm">0</span>].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    print(<span class="st">f"  ✅  {len(rows)} contacts → {path}"</span>)
+
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">with</span> open(INPUT_JSON) <span class="kw">as</span> f:
+        profiles = json.load(f)
+
+    print(<span class="st">f"\n🔍 Processing {len(profiles)} enriched profiles...\n"</span>)
+
+    db_rows, pevc_rows, all_rows = [], [], []
+    stats = {<span class="st">"total"</span>: len(profiles), <span class="st">"india_skipped"</span>: <span class="nm">0</span>, <span class="st">"no_location"</span>: <span class="nm">0</span>}
+
+    <span class="kw">for</span> p <span class="kw">in</span> profiles:
+        location = get_location(p)
+
+        <span class="cm"># Skip if no location data (can't confirm outside India)</span>
+        <span class="kw">if</span> location == <span class="st">"Unknown"</span>:
+            stats[<span class="st">"no_location"</span>] += <span class="nm">1</span>
+            <span class="kw">continue</span>
+
+        <span class="cm"># Exclude India-based contacts</span>
+        <span class="kw">if</span> is_india(p):
+            stats[<span class="st">"india_skipped"</span>] += <span class="nm">1</span>
+            <span class="kw">continue</span>
+
+        db_match, db_reason   = is_db_alumni(p)
+        pv_match, pv_reason   = is_pevc(p)
+
+        <span class="kw">if</span> db_match:
+            row = build_row(p, <span class="st">"Deutsche Bank Alumni"</span>, db_reason)
+            db_rows.append(row)
+            all_rows.append(row)
+
+        <span class="kw">if</span> pv_match:
+            row = build_row(p, <span class="st">"PE/VC Professional"</span>, pv_reason)
+            pevc_rows.append(row)
+            <span class="kw">if not</span> db_match:   <span class="cm"># avoid duplicates in combined list</span>
+                all_rows.append(row)
+
+    <span class="cm"># Write outputs</span>
+    write_csv(db_rows,   OUTPUT_CSV_DB)
+    write_csv(pevc_rows, OUTPUT_CSV_PEVC)
+    write_csv(all_rows,  OUTPUT_CSV_ALL)
+
+    print(<span class="st">f"""
+📊 Summary
+──────────────────────────────
+Total profiles processed : {stats['total']}
+India-based (excluded)   : {stats['india_skipped']}
+No location data         : {stats['no_location']}
+Deutsche Bank alumni     : {len(db_rows)}
+PE/VC professionals      : {len(pevc_rows)}
+Combined unique targets  : {len(all_rows)}
+──────────────────────────────
+"""</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    main()</pre>
+
+    <div class="tip-box">
+      <div class="icon">💡</div>
+      <p>Run: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">python3 filter_contacts.py</code> — produces three CSVs: DB alumni, PE/VC, and a merged all-targets file.</p>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Step 5</div>
+      <h2>Output Format — Your BD Outreach List</h2>
+    </div>
+
+    <p>Each output CSV row looks like this. Import directly into HubSpot, Salesforce, or any CRM.</p>
+
+    <div class="output-preview">
+      <div class="row header">
+        <div class="cell">Bucket</div>
+        <div class="cell">First Name</div>
+        <div class="cell">Last Name</div>
+        <div class="cell">Current Title</div>
+        <div class="cell">Current Company</div>
+        <div class="cell">Location</div>
+        <div class="cell">Match Reason</div>
+        <div class="cell">Profile URL</div>
+      </div>
+      <div class="row">
+        <div class="cell">Deutsche Bank Alumni</div>
+        <div class="cell">Michael</div>
+        <div class="cell">Weber</div>
+        <div class="cell">Managing Director</div>
+        <div class="cell">Barclays Capital</div>
+        <div class="cell">London, UK</div>
+        <div class="cell">VP IBD @ Deutsche Bank AG | MD Credit @ Deutsche Bank</div>
+        <div class="cell">linkedin.com/in/...</div>
+      </div>
+      <div class="row">
+        <div class="cell">PE/VC Professional</div>
+        <div class="cell">Sarah</div>
+        <div class="cell">Müller</div>
+        <div class="cell">Principal</div>
+        <div class="cell">Permira Advisers</div>
+        <div class="cell">Frankfurt, Germany</div>
+        <div class="cell">Known firm: Permira | Title: Principal</div>
+        <div class="cell">linkedin.com/in/...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COST REFERENCE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Cost Reference</div>
+      <h2>Budget Estimate</h2>
+    </div>
+
+    <table class="cost-table">
+      <thead>
+        <tr><th>Network Size</th><th>Profiles to Enrich</th><th>No-Email Cost</th><th>With Email Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Small (500 connections)</td><td>500</td><td>$2</td><td>$5</td></tr>
+        <tr><td>Medium (1,500 connections)</td><td>1,500</td><td>$6</td><td>$15</td></tr>
+        <tr><td>Large (3,000+ connections)</td><td>3,000</td><td>$12</td><td>$30</td></tr>
+        <tr><td>Very large (5,000 connections)</td><td>5,000</td><td>$20</td><td>$50</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box">
+      <div class="icon">💡</div>
+      <p>Start with "Profile details no email" mode at $4/1k. Only upgrade to the $10/1k email mode for the filtered shortlist (the 30–100 contacts who actually match your criteria) — that way the incremental email lookup costs pennies.</p>
+    </div>
+  </div>
+
+  <!-- TROUBLESHOOTING -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Troubleshooting</div>
+      <h2>Common Issues & Fixes</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Filter finds 0 Deutsche Bank alumni</td>
+          <td>Work history key name differs in actor output</td>
+          <td>Print <code style="background:var(--surface2);padding:2px 4px;border-radius:4px;font-size:11px;">profiles[0].keys()</code> and update the <code style="background:var(--surface2);padding:2px 4px;border-radius:4px;font-size:11px;">get_work_history()</code> fallback keys</td>
+        </tr>
+        <tr>
+          <td>All locations show "Unknown"</td>
+          <td>Actor returns location under a different field name</td>
+          <td>Print <code style="background:var(--surface2);padding:2px 4px;border-radius:4px;font-size:11px;">profiles[0]</code> to see the actual JSON structure, update <code style="background:var(--surface2);padding:2px 4px;border-radius:4px;font-size:11px;">get_location()</code></td>
+        </tr>
+        <tr>
+          <td>LinkedIn CSV has no Profile URL column</td>
+          <td>LinkedIn changed export format</td>
+          <td>Export "Connections" data type specifically, not the full archive. Check for "URL" or "linkedin_url" column names.</td>
+        </tr>
+        <tr>
+          <td>PE/VC match rate too low</td>
+          <td>Missing niche fund names in PEVC_FIRM_NAMES</td>
+          <td>Add firm-specific names relevant to your network (APAC funds, boutique GPs, regional VCs)</td>
+        </tr>
+        <tr>
+          <td>False positives (non-PE "Principal" titles)</td>
+          <td>Title pattern too broad</td>
+          <td>Remove <code style="background:var(--surface2);padding:2px 4px;border-radius:4px;font-size:11px;">r"\bprincipal\b"</code> from PEVC_TITLE_PATTERNS and rely on company-level matching instead</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- QUICK START -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">Quick Start</div>
+      <h2>Complete Command Sequence</h2>
+    </div>
+
+    <div class="code-label">Terminal — full run from export to BD list</div>
+    <pre><span class="cm"># 1. Put Connections.csv and all three .py scripts in the same folder
+# 2. Install dependencies</span>
+pip install requests
+
+<span class="cm"># 3. Extract profile URLs from LinkedIn export</span>
+python3 prepare_urls.py
+<span class="cm"># → creates profile_urls.json</span>
+
+<span class="cm"># 4. Set your Apify token, then run enrichment</span>
+<span class="cm"># (edit APIFY_TOKEN in run_apify.py first)</span>
+python3 run_apify.py
+<span class="cm"># → creates enriched_profiles.json  (~$4–20 depending on network size)</span>
+
+<span class="cm"># 5. Filter to your BD targets</span>
+python3 filter_contacts.py
+<span class="cm"># → creates db_alumni_outside_india.csv</span>
+<span class="cm"># → creates pevc_outside_india.csv</span>
+<span class="cm"># → creates all_targets.csv</span></pre>
+  </div>
+
+  <hr class="divider">
+
+  <div style="text-align:center;padding:20px 0 40px;color:var(--muted);font-size:13px;">
+    <strong style="color:var(--text);">Actor used:</strong> harvestapi/linkedin-profile-scraper &nbsp;·&nbsp;
+    <strong style="color:var(--text);">Cost:</strong> $4/1k profiles &nbsp;·&nbsp;
+    <strong style="color:var(--text);">Success rate:</strong> 100% &nbsp;·&nbsp;
+    <strong style="color:var(--text);">No LinkedIn cookies required</strong>
+  </div>
+
+</div>
+</body>
+</html>
